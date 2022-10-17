@@ -1,0 +1,14 @@
+10/17/22: Motor Control
+
+Goal: Create a program that allows the user to control the velocity of a motor using one of the joysticks on the gamepad
+
+Lines of code that you may want to use:
+
+//Get the value of the left y joystick
+gamepad1.left_stick_y
+
+//Sets the power of a given motor
+*Motor name*.setPower()
+
+//Find the location of a motor using the motor name defined in the driver hub
+hardwareMap.get(DcMotor.class, "*Motor name*");
