@@ -123,8 +123,8 @@ public class RobotTeleopTank_Test extends OpMode{
         left = -gamepad1.left_stick_y;
         right = -gamepad1.right_stick_y;
 
-        leftDrive.setPower(1);
-        rightDrive.setPower(1);
+        leftDrive.setPower(left);
+        rightDrive.setPower(right);
 
         // Use gamepad left & right Bumpers to open and close the claw
        // if (gamepad1.right_bumper)
