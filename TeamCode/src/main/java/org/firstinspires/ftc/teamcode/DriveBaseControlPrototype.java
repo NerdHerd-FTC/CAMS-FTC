@@ -64,7 +64,11 @@ public class DriveBaseControlPrototype extends LinearOpMode {
         double right;
         double drive;
         double turn;
+<<<<<<< Updated upstream
         double max;
+=======
+        boolean turning;
+>>>>>>> Stashed changes
         boolean lock;
         double speedMult;
         ////SLOW CONTROL (min 1) gives the driver better control over slower speeds, but worse control over faster speeds.
@@ -109,6 +113,7 @@ public class DriveBaseControlPrototype extends LinearOpMode {
             else {
                 speedMult = 0.5;
             }
+<<<<<<< Updated upstream
             //If direction lock:
             if (lock && (drive > 0.1 || turn > 0.1)) {
                 //If the joystick is pointed towards the left or right...
@@ -122,6 +127,26 @@ public class DriveBaseControlPrototype extends LinearOpMode {
                         //... and if not, turn right.
                         leftDrive.setPower(-0.33);
                         rightDrive.setPower(0.33);
+=======
+            if (Math.abs(drive) < Math.abs(turn)) {
+                turning = true;
+                speedMult *= 0.5;
+            }
+            else {turning = false;}
+            //If direction lock:
+            if (lock && (drive > 0.1 || turn > 0.1)) {
+                //If the joystick is pointed towards the left or right...
+                if (turning){
+                    if (turn > 0){
+                        //...if that direction is left, turn left...
+                        leftDrive.setPower(0.15);
+                        rightDrive.setPower(-0.15);
+                    }
+                    else{
+                        //... and if not, turn right.
+                        leftDrive.setPower(-0.15);
+                        rightDrive.setPower(0.15);
+>>>>>>> Stashed changes
                     }
                 }
                 //If the joystick is pointed up or down...
