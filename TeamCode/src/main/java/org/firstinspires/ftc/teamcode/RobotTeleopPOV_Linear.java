@@ -33,6 +33,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
@@ -53,13 +54,8 @@ import com.qualcomm.robotcore.util.Range;
 public class RobotTeleopPOV_Linear extends LinearOpMode {
 
     /* Declare OpMode members. */
-    public DcMotor MotorA = null;
-    public DcMotor rightDrive  = null;
-
-    public static final double MID_SERVO   =  0.5 ;
-    public static final double CLAW_SPEED  = 0.02 ;                 // sets rate to move servo
-    public static final double ARM_UP_POWER    =  0.45 ;
-    public static final double ARM_DOWN_POWER  = -0.45 ;
+    public DcMotor FrontRightMotor = null;
+    public DcMotor FrontLeftMotor  = null;
 
     //Control gives the driver more control over the free speed of the motor. (min 1)
     public static final int control = 4;
@@ -73,9 +69,11 @@ public class RobotTeleopPOV_Linear extends LinearOpMode {
         double max;
 
         // Define and Initialize Motors
-        MotorA  = hardwareMap.get(DcMotor.class, "MotorA");
-        //rightDrive = hardwareMap.get(DcMotor.class, "right_drive");
+        FrontRightMotor  = hardwareMap.get(DcMotor.class, "FrontRightMotor");
+        FrontLeftMotor = hardwareMap.get(DcMotor.class, "FrontLeftMotor");
 
+        FrontRightMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        FrontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // If there are encoders connected, switch to RUN_USING_ENCODER mode for greater accuracy
         // leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -112,8 +110,8 @@ public class RobotTeleopPOV_Linear extends LinearOpMode {
 
             // Output the safe vales to the motor drives. The exponent gives the driver better control over the free speed of the motor.
 
-            MotorA.setPower(Math.pow(left, 2 * control - 1));
-            //rightDrive.setPower(right);
+            FrontRightMotor.setPower(right);
+            FrontLeftMotor.setPower(left);
 
 
             telemetry.addData("left",  "%.2f", left);
