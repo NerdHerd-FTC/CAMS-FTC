@@ -29,12 +29,9 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.util.Range;
+        import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+        import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+        import com.qualcomm.robotcore.hardware.DcMotor;
 
 /**
  * This particular OpMode executes a POV Game style Teleop for a direct drive robot
@@ -49,7 +46,6 @@ import com.qualcomm.robotcore.util.Range;
  */
 
 @TeleOp(name="Robot: Teleop POV", group="Robot")
-//@Disabled
 public class RobotTeleopPOV_Linear extends LinearOpMode {
 
     /* Declare OpMode members. */
@@ -71,6 +67,8 @@ public class RobotTeleopPOV_Linear extends LinearOpMode {
         MotorA  = hardwareMap.get(DcMotor.class, "MotorA");
         MotorB = hardwareMap.get(DcMotor.class, "MotorB");
 
+        MotorA.setDirection(DcMotor.Direction.REVERSE);
+        MotorB.setDirection(DcMotor.Direction.FORWARD);
 
         // If there are encoders connected, switch to RUN_USING_ENCODER mode for greater accuracy
         // leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -91,12 +89,12 @@ public class RobotTeleopPOV_Linear extends LinearOpMode {
             // Run wheels in POV mode (note: The joystick goes negative when pushed forward, so negate it)
             // In this mode the Left stick moves the robot fwd and back, the Right stick turns left and right.
             // This way it's also easy to just drive straight, or just turn.
-            drive = -gamepad1.left_stick_y;
-            turn  =  gamepad1.right_stick_x;
+            left = -gamepad1.left_stick_y;
+            right  =  -gamepad1.right_stick_y;
 
             // Combine drive and turn for blended motion.
-            left  = drive + turn;
-            right = drive - turn;
+            //left  = drive + turn;
+            //right = drive - turn;
 
             // Normalize the values so neither exceed +/- 1.0
             max = Math.max(Math.abs(left), Math.abs(right));
@@ -109,13 +107,6 @@ public class RobotTeleopPOV_Linear extends LinearOpMode {
             // Output the safe vales to the motor drives.
             MotorA.setPower(left);
             MotorB.setPower(right);
-
-            // Use gamepad left & right Bumpers to open and close the claw
-
-
-            // Move both servos to new position.  Assume servos are mirror image of each other.
-
-            // Use gamepad buttons to move arm up (Y) and down (A)
 
             // Send telemetry message to signify robot running;
             telemetry.addData("left",  "%.2f", left);
