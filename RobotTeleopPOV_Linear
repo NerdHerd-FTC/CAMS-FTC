@@ -29,9 +29,9 @@
 
 package org.firstinspires.ftc.teamcode;
 
-        import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-        import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-        import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
 
 /**
  * This particular OpMode executes a POV Game style Teleop for a direct drive robot
@@ -90,27 +90,47 @@ public class RobotTeleopPOV_Linear extends LinearOpMode {
             // In this mode the Left stick moves the robot fwd and back, the Right stick turns left and right.
             // This way it's also easy to just drive straight, or just turn.
             left = -gamepad1.left_stick_y;
-            right  =  -gamepad1.right_stick_y;
+            right  =  gamepad1.right_stick_x;
 
             // Combine drive and turn for blended motion.
             //left  = drive + turn;
             //right = drive - turn;
 
             // Normalize the values so neither exceed +/- 1.0
-            max = Math.max(Math.abs(left), Math.abs(right));
+            max = Math.abs(left);
             if (max > 1.0)
             {
                 left /= max;
+            }
+
+            max = Math.abs(right);
+            if (max > 1.0)
+            {
                 right /= max;
             }
 
+
+            //if (right > 0.0)
+            //{
+            MotorA.setPower(right+left);
+            MotorB.setPower(-right+left);
+            //}
+            //else
+            //{
+            //MotorA.setPower(-right-left);
+            //MotorB.setPower(right-left);
+            //}
+
             // Output the safe vales to the motor drives.
-            MotorA.setPower(left);
-            MotorB.setPower(right);
+            //MotorA.setPower(left);
+            //MotorB.setPower(left
+            //);
+
+
 
             // Send telemetry message to signify robot running;
             telemetry.addData("left",  "%.2f", left);
-            telemetry.addData("right", "%.2f", right);
+            //telemetry.addData("right", "%.2f", right);
             telemetry.update();
 
             // Pace this loop so jaw action is reasonable speed.
