@@ -1,35 +1,35 @@
-/* Copyright (c) 2017 FIRST. All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted (subject to the limitations in the disclaimer below) provided that
- * the following conditions are met:
- *
- * Redistributions of source code must retain the above copyright notice, this list
- * of conditions and the following disclaimer.
- *
- * Redistributions in binary form must reproduce the above copyright notice, this
- * list of conditions and the following disclaimer in the documentation and/or
- * other materials provided with the distribution.
- *
- * Neither the name of FIRST nor the names of its contributors may be used to endorse or
- * promote products derived from this software without specific prior written permission.
- *
- * NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE GRANTED BY THIS
- * LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
- * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+/*
+        * Redistribution and use in source and binary forms, with or without modification,
+        * are permitted (subject to the limitations in the disclaimer below) provided that
+        * the following conditions are met:
+        *
+        * Redistributions of source code must retain the above copyright notice, this list
+        * of conditions and the following disclaimer.
+        *
+        * Redistributions in binary form must reproduce the above copyright notice, this
+        * list of conditions and the following disclaimer in the documentation and/or
+        * other materials provided with the distribution.
+        *
+        * Neither the name of FIRST nor the names of its contributors may be used to endorse or
+        * promote products derived from this software without specific prior written permission.
+        *
+        * NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE GRANTED BY THIS
+        * LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+        * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+        * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+        * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+        * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+        * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+        * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+        * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+        * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+        * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
 package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+
 /**
  * This particular OpMode executes a POV Game style Teleop for a direct drive robot
  * The code is structured as a LinearOpMode
@@ -41,16 +41,16 @@ import com.qualcomm.robotcore.hardware.DcMotor;
  * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
-@TeleOp(name="Prototype", group="Robot")
-public class DriveBaseControlPrototype extends LinearOpMode {
+@TeleOp(name="Tank Drive", group="Robot")
+public class TankDriveControlPrototype extends LinearOpMode {
     /* Declare OpMode members. */
     public DcMotor  leftDrive   = null;
     public DcMotor  rightDrive  = null;
-    /*
-    public DcMotor  leftArm     = null;
-    public Servo    leftClaw    = null;
-    public Servo    rightClaw   = null;
-    */
+  /*
+  public DcMotor  leftArm     = null;
+  public Servo    leftClaw    = null;
+  public Servo    rightClaw   = null;
+  */
     /**
      double clawOffset = 0;
      public static final double MID_SERVO   =  0.5 ;
@@ -64,14 +64,11 @@ public class DriveBaseControlPrototype extends LinearOpMode {
         double right;
         double drive;
         double turn;
-<<<<<<< Updated upstream
-        double max;
-=======
         boolean turning;
->>>>>>> Stashed changes
         boolean lock;
         double speedMult;
         ////SLOW CONTROL (min 1) gives the driver better control over slower speeds, but worse control over faster speeds.
+
         // Define and Initialize Motors
         leftDrive  = hardwareMap.get(DcMotor.class, "MotorA");
         rightDrive = hardwareMap.get(DcMotor.class, "MotorB");
@@ -101,90 +98,52 @@ public class DriveBaseControlPrototype extends LinearOpMode {
             // Run wheels in POV mode (note: The joystick goes negative when pushed forward, so negate it)
             // In this mode the Left stick moves the robot fwd and back, the Right stick turns left and right.
             // This way it's also easy to just drive straight, or just turn.
-            drive = gamepad1.left_stick_y;
-            turn  =  gamepad1.left_stick_x;
+            drive = -1 * gamepad1.left_stick_y;
+            turn  =  gamepad1.right_stick_x;
             lock = gamepad1.right_bumper;
-            if (gamepad1.y){
+
+            if (gamepad1.right_bumper){
                 speedMult = 1;
+                telemetry.addData("Speed: ", "%.2f", speedMult);
             }
-            else if (gamepad1.b){
+            else if (gamepad1.left_bumper){
                 speedMult = 0.25;
+                telemetry.addData("Speed: ", "%.2f", speedMult);
             }
             else {
                 speedMult = 0.5;
+                telemetry.addData("Speed: ", "%.2f", speedMult);
             }
-<<<<<<< Updated upstream
-            //If direction lock:
-            if (lock && (drive > 0.1 || turn > 0.1)) {
-                //If the joystick is pointed towards the left or right...
-                if (Math.abs(drive) < Math.abs(turn)){
-                    if (turn > 0){
-                        //...if that direction is left, turn left...
-                        leftDrive.setPower(0.33);
-                        rightDrive.setPower(-0.33);
-                    }
-                    else{
-                        //... and if not, turn right.
-                        leftDrive.setPower(-0.33);
-                        rightDrive.setPower(0.33);
-=======
+
             if (Math.abs(drive) < Math.abs(turn)) {
                 turning = true;
                 speedMult *= 0.5;
             }
             else {turning = false;}
-            //If direction lock:
-            if (lock && (drive > 0.1 || turn > 0.1)) {
-                //If the joystick is pointed towards the left or right...
-                if (turning){
-                    if (turn > 0){
-                        //...if that direction is left, turn left...
-                        leftDrive.setPower(0.15);
-                        rightDrive.setPower(-0.15);
-                    }
-                    else{
-                        //... and if not, turn right.
-                        leftDrive.setPower(-0.15);
-                        rightDrive.setPower(0.15);
->>>>>>> Stashed changes
-                    }
-                }
-                //If the joystick is pointed up or down...
-                else{
-                    if (drive > 0){
-                        //...move forwards...
-                        leftDrive.setPower(0.33);
-                        rightDrive.setPower(0.33);
-                    }
-                    else{
-                        //...and if not, move backwards.
-                        leftDrive.setPower(-0.33);
-                        rightDrive.setPower(-0.33);
-                    }
-                }
-            }
+
             //If normal driving:
-            else{
-                // Combine drive and turn for blended motion.
-                left = drive + turn;
-                right = drive - turn;
-                // Normalize the values so neither exceed +/- 1.0
-                if (left > 1.0) {
-                    left = 1.0;
-                }
-                if (right > 1.0){
-                    right = 1.0;
-                }
-                // Output the safe vales to the motor drives.
-                leftDrive.setPower(Math.pow(left, 3) * speedMult);
-                rightDrive.setPower(Math.pow(right, 3) * speedMult);
+
+            // Combine drive and turn for blended motion.
+            left = drive + turn;
+            right = drive - turn;
+            // Normalize the values so neither exceed +/- 1.0
+            if (left > 1.0) {
+                left = 1.0;
             }
+            if (right > 1.0){
+                right = 1.0;
+            }
+            // Output the safe vales to the motor drives.
+            leftDrive.setPower(Math.pow(left, 3) * speedMult);
+            rightDrive.setPower(Math.pow(right, 3) * speedMult);
+
             // Use gamepad left & right Bumpers to open and close the claw
             /**
              if (gamepad1.right_bumper)
              clawOffset += CLAW_SPEED;
              else if (gamepad1.left_bumper)
              clawOffset -= CLAW_SPEED;
+
              // Move both servos to new position.  Assume servos are mirror image of each other.
              clawOffset = Range.clip(clawOffset, -0.5, 0.5);
              leftClaw.setPosition(MID_SERVO + clawOffset);
@@ -201,7 +160,6 @@ public class DriveBaseControlPrototype extends LinearOpMode {
             //telemetry.addData("claw",  "Offset = %.2f", clawOffset);
             telemetry.addData("X: ",  "%.2f", turn);
             telemetry.addData("Y: ", "%.2f", (drive * -1));
-            telemetry.update();
             // Pace this loop so jaw action is reasonable speed.
             sleep(50);
         }
