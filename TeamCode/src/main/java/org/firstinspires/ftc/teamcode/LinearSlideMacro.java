@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 @TeleOp(name="LinearSlideTest", group="Robot")
-public class LinearSlideTest extends LinearOpMode {
+public class LinearSlideMacro extends LinearOpMode {
     /* Declare OpMode members. */
     public DcMotor linearSlide = null;
 
@@ -54,6 +54,7 @@ public class LinearSlideTest extends LinearOpMode {
                 }
             }
 
+            telemetry.addData("Location ", slideLocation);
             telemetry.update();
 
             // Pace this loop so jaw action is reasonable speed.
