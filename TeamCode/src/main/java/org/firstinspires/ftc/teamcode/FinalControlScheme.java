@@ -59,9 +59,11 @@ public class FinalControlScheme extends LinearOpMode {
         double right;
         double drive;
         double turn;
-        boolean lock;
         double speedMult;
-        ////SLOW CONTROL (min 1) gives the driver better control over slower speeds, but worse control over faster speeds.
+        final double slidePower = 1.0; //The power of the linear slide (float from 0 to 1)
+
+        //Telemetry update variables:
+        String speed;
 
         // Define and Initialize Motors and Servos
         leftDrive  = hardwareMap.get(DcMotor.class, "MotorA");
@@ -78,6 +80,7 @@ public class FinalControlScheme extends LinearOpMode {
         // If there are encoders connected, switch to RUN_USING_ENCODER mode for greater accuracy
         // leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         // rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        linearSlide.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         claw.setPosition(0.0);
 
         // Send telemetry message to signify robot waiting;
@@ -97,15 +100,15 @@ public class FinalControlScheme extends LinearOpMode {
             //Handle speed multiplication
             if (gamepad1.left_bumper){
                 speedMult = 1;
-                telemetry.addData("Speed: ", "String", "Fast");
+                speed = "Fast";
             }
             else if (gamepad1.right_bumper){
                 speedMult = 0.25;
-                telemetry.addData("Speed: ", "String", "Slow");
+                speed = "Slow";
             }
             else {
                 speedMult = 0.5;
-                telemetry.addData("Speed: ", "String""Normal");
+                speed = "Normal";
             }
 
             //Handle claw open and close
@@ -118,10 +121,13 @@ public class FinalControlScheme extends LinearOpMode {
 
             //Handle linear slide movement
             if (gamepad1.left_trigger >= 0.5){
-                linearSlide.setPower(1);
+                linearSlide.setPower(slidePower);
             }
             else if (gamepad1.right_trigger >= 0.5){
-                linearSlide.setPower(-1);
+                linearSlide.setPower(-1 * slidePower);
+            }
+            else {
+                linearSlide.setPower(0);
             }
 
             //Drive!
@@ -140,11 +146,9 @@ public class FinalControlScheme extends LinearOpMode {
             rightDrive.setPower(Math.pow(right, 3) * speedMult);
 
             // Send telemetry message to signify robot running;
-            //telemetry.addData("claw",  "Offset = %.2f", clawOffset);
-            telemetry.addData("X: ",  "%.2f", turn);
-            telemetry.addData("Y: ", "%.2f", (drive * -1));
-            if (lock) {telemetry.addData("Lock: ", "%.2f", "ON!");}
-            else {telemetry.addData("Lock: ", "%.2f", "OFF!");}
+            telemetry.addData("Speed: ", "String", speed);
+            telemetry.addData("Stick X: ",  "%.2f", turn);
+            telemetry.addData("Stick Y: ", "%.2f", (drive * -1));
             telemetry.update();
             // Pace this loop so jaw action is reasonable speed.
             sleep(50);

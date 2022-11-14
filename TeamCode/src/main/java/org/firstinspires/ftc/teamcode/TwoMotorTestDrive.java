@@ -88,11 +88,11 @@ public class TwoMotorTestDrive extends LinearOpMode {
             left  = drive + turn;
             right = drive - turn;
             // Normalize the values so neither exceed +/- 1.0
-            max = Math.max(Math.abs(left), Math.abs(right));
-            if (max > 1.0)
-            {
-                left /= max;
-                right /= max;
+            if (left > 1.0) {
+                left = 1.0;
+            }
+            if (right > 1.0){
+                right = 1.0;
             }
             // Output the safe vales to the motor drives.
             leftDrive.setPower(Math.pow(left, 2*slowControl-1));

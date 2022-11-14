@@ -43,37 +43,24 @@ import com.qualcomm.robotcore.hardware.DcMotor;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 @TeleOp(name="Robot: Teleop POV", group="Robot")
-public class DriveBaseControlPrototype extends LinearOpMode {
+public class TankDrive extends LinearOpMode {
     /* Declare OpMode members. */
     public DcMotor  leftDrive   = null;
     public DcMotor  rightDrive  = null;
-    /*
-    public DcMotor  leftArm     = null;
-    public Servo    leftClaw    = null;
-    public Servo    rightClaw   = null;
-    */
-    /**
-     double clawOffset = 0;
-     public static final double MID_SERVO   =  0.5 ;
-     public static final double CLAW_SPEED  = 0.02 ;                 // sets rate to move servo
-     public static final double ARM_UP_POWER    =  0.45 ;
-     public static final double ARM_DOWN_POWER  = -0.45 ;
-     */
     @Override
     public void runOpMode() {
         double left;
         double right;
         double drive;
         double turn;
-        boolean turning;
-        boolean lock;
+        double max;
         double speedMult;
-        ////SLOW CONTROL (min 1) gives the driver better control over slower speeds, but worse control over faster speeds.
-
+        //SLOW CONTROL (min 1) gives the driver better control over slower speeds, but worse control over faster speeds.
+        final int slowControl = 5;
         // Define and Initialize Motors
         leftDrive  = hardwareMap.get(DcMotor.class, "MotorA");
         rightDrive = hardwareMap.get(DcMotor.class, "MotorB");
-        //leftArm    = hardwareMap.get(DcMotor.class, "left_arm");
+
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
         // Note: The settings here assume direct drive on left and right wheels.  Gear Reduction or 90 Deg drives may require direction flips
@@ -83,12 +70,7 @@ public class DriveBaseControlPrototype extends LinearOpMode {
         // leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         // rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         // Define and initialize ALL installed servos.
-        /**
-         leftClaw  = hardwareMap.get(Servo.class, "left_hand");
-         rightClaw = hardwareMap.get(Servo.class, "right_hand");
-         leftClaw.setPosition(MID_SERVO);
-         rightClaw.setPosition(MID_SERVO);
-         */
+
         // Send telemetry message to signify robot waiting;
         telemetry.addData(">", "Robot Ready.  Press Play.");    //
         telemetry.update();
@@ -99,9 +81,8 @@ public class DriveBaseControlPrototype extends LinearOpMode {
             // Run wheels in POV mode (note: The joystick goes negative when pushed forward, so negate it)
             // In this mode the Left stick moves the robot fwd and back, the Right stick turns left and right.
             // This way it's also easy to just drive straight, or just turn.
-            drive = gamepad1.left_stick_y;
-            turn  =  gamepad1.left_stick_x;
-            lock = gamepad1.right_bumper;
+            left = -gamepad1.left_stick_y;
+            right  =  gamepad1.right_stick_y;
 
             if (gamepad1.left_bumper){
                 speedMult = 1;
@@ -116,83 +97,20 @@ public class DriveBaseControlPrototype extends LinearOpMode {
                 telemetry.addData("Speed: ", "%.2f", "Normal");
             }
 
-            if (Math.abs(drive) < Math.abs(turn)) {
-                turning = true;
-                speedMult *= 0.5;
+            // Normalize the values so neither exceed +/- 1.0
+            max = Math.max(Math.abs(left), Math.abs(right));
+            if (max > 1.0)
+            {
+                left /= max;
+                right /= max;
             }
-            else {turning = false;}
-
-            //If direction lock:
-            if (lock && (drive > 0.1 || turn > 0.1)) {
-                //If the joystick is pointed towards the left or right...
-                if (turning){
-                    if (turn > 0){
-                        //...if that direction is left, turn left...
-                        leftDrive.setPower(0.15);
-                        rightDrive.setPower(-0.15);
-                    }
-                    else{
-                        //... and if not, turn right.
-                        leftDrive.setPower(-0.15);
-                        rightDrive.setPower(0.15);
-                    }
-                }
-                //If the joystick is pointed up or down...
-                else{
-                    if (drive > 0){
-                        //...move forwards...
-                        leftDrive.setPower(0.33);
-                        rightDrive.setPower(0.33);
-                    }
-                    else{
-                        //...and if not, move backwards.
-                        leftDrive.setPower(-0.33);
-                        rightDrive.setPower(-0.33);
-                    }
-                }
-            }
-
-            //If normal driving:
-            else{
-                // Combine drive and turn for blended motion.
-                left = drive + turn;
-                right = drive - turn;
-                // Normalize the values so neither exceed +/- 1.0
-                if (left > 1.0) {
-                    left = 1.0;
-                }
-                if (right > 1.0){
-                    right = 1.0;
-                }
-                // Output the safe vales to the motor drives.
-                leftDrive.setPower(Math.pow(left, 3) * speedMult);
-                rightDrive.setPower(Math.pow(right, 3) * speedMult);
-            }
-            // Use gamepad left & right Bumpers to open and close the claw
-            /**
-             if (gamepad1.right_bumper)
-             clawOffset += CLAW_SPEED;
-             else if (gamepad1.left_bumper)
-             clawOffset -= CLAW_SPEED;
-
-             // Move both servos to new position.  Assume servos are mirror image of each other.
-             clawOffset = Range.clip(clawOffset, -0.5, 0.5);
-             leftClaw.setPosition(MID_SERVO + clawOffset);
-             rightClaw.setPosition(MID_SERVO - clawOffset);
-             // Use gamepad buttons to move arm up (Y) and down (A)
-             if (gamepad1.y)
-             leftArm.setPower(ARM_UP_POWER);
-             else if (gamepad1.a)
-             leftArm.setPower(ARM_DOWN_POWER);
-             else
-             leftArm.setPower(0.0);
-             */
+            // Output the safe vales to the motor drives.
+            leftDrive.setPower(Math.pow(left, 3) * speedMult);
+            rightDrive.setPower(Math.pow(right, 3) * speedMult);
             // Send telemetry message to signify robot running;
             //telemetry.addData("claw",  "Offset = %.2f", clawOffset);
-            telemetry.addData("X: ",  "%.2f", turn);
-            telemetry.addData("Y: ", "%.2f", (drive * -1));
-            if (lock) {telemetry.addData("Lock: ", "%.2f", "ON!");}
-            else {telemetry.addData("Lock: ", "%.2f", "OFF!");}
+            telemetry.addData("left",  "%.2f", left);
+            telemetry.addData("right", "%.2f", right);
             telemetry.update();
             // Pace this loop so jaw action is reasonable speed.
             sleep(50);
