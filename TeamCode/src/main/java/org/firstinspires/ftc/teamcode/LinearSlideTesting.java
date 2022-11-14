@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
+//for field testing 
 @TeleOp(name="LinearSlideTest", group="Robot")
 public class LinearSlideTesting extends LinearOpMode {
     /* Declare OpMode members. */
@@ -12,9 +13,10 @@ public class LinearSlideTesting extends LinearOpMode {
     @Override
     public void runOpMode() {
         double slideLocation = 0; //tracks the linear slide's location based on how many times the motor has ran
-
+        boolean slideUp = false;
+        boolean slideDown = false;
         // Define and Initialize Motors
-        linearSlide = hardwareMap.get(DcMotor.class, "MotorC");
+        linearSlide = hardwareMap.get(DcMotor.class, "MotorA");
 
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
@@ -32,13 +34,15 @@ public class LinearSlideTesting extends LinearOpMode {
         while (opModeIsActive()) {
             telemetry.addData("Hello", "Linear Slide test in progress.");
 
-            if (gamepad1.x) {
-                if (slideLocation == 0){ //0 represents standstill
+            if (gamepad1.y) {
+                if (slideLocation == 0) { //0 represents standstill
                     slideLocation += 1; //get out of standstill to move up
                 } else {
-                    slideLocation = -slideLocation; //reverse direction if x button is clicked
+                    slideLocation = Math.abs(slideLocation); //reverse direction if x button is clicked
                 }
-            }
+            } else if (gamepad1.a) {
+                    slideLocation = -Math.abs(slideLocation);
+                }
 
             if (slideLocation > 0) { //going up
                 if (Math.abs(slideLocation) <= 200) { //currently requires a little more than 10 seconds, or 10,000 ms to reach top; based on 50 ms loops
