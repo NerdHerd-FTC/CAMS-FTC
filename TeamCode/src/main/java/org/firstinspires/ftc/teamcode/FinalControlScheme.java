@@ -42,13 +42,13 @@ import com.qualcomm.robotcore.hardware.Servo;
  * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
-@TeleOp(name="Robot: Teleop POV", group="Robot")
+@TeleOp(name="Robot: Teleop POV Final", group="Robot")
 public class FinalControlScheme extends LinearOpMode {
     /* Declare OpMode members. */
     public DcMotor  leftDrive   = null;
     public DcMotor  rightDrive  = null;
     public DcMotor  linearSlide = null;
-    public Servo claw = null;
+    //public Servo claw = null;
 
     public static final double MIN_POSITION  =  0.0 ;
     public static final double MAX_POSITION  =  0.5 ;
@@ -69,7 +69,7 @@ public class FinalControlScheme extends LinearOpMode {
         leftDrive  = hardwareMap.get(DcMotor.class, "MotorA");
         rightDrive = hardwareMap.get(DcMotor.class, "MotorB");
         linearSlide = hardwareMap.get(DcMotor.class, "MotorC");
-        claw = hardwareMap.get(Servo.class, "ServoA");
+        //claw = hardwareMap.get(Servo.class, "ServoA");
         //leftArm    = hardwareMap.get(DcMotor.class, "left_arm");
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
@@ -81,7 +81,7 @@ public class FinalControlScheme extends LinearOpMode {
         // leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         // rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         linearSlide.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        claw.setPosition(0.0);
+        //claw.setPosition(0.0);
 
         // Send telemetry message to signify robot waiting;
         telemetry.addData(">", "Robot Ready.  Press Play.");    //
@@ -95,7 +95,6 @@ public class FinalControlScheme extends LinearOpMode {
             // This way it's also easy to just drive straight, or just turn.
             drive = -1 * gamepad1.left_stick_y;
             turn  =  gamepad1.right_stick_x;
-            lock = gamepad1.right_bumper;
 
             //Handle speed multiplication
             if (gamepad1.left_bumper){
@@ -113,10 +112,10 @@ public class FinalControlScheme extends LinearOpMode {
 
             //Handle claw open and close
             if (gamepad1.x){
-                claw.setPosition(0);
+                //claw.setPosition(0);
             }
             else if (gamepad1.a){
-                claw.setPosition(1);
+                //claw.setPosition(1);
             }
 
             //Handle linear slide movement
