@@ -35,20 +35,16 @@ public class LinearSlideManual extends LinearOpMode {
 
             //invert stuff
             if (gamepad1.y) {
-                if (slideUp) {
-                    slideUp = false;
-                } else {
-                    slideUp = true;
-                    slideDown = false;
-                }
+                slideUp = true;
+                slideDown = false;
             }
             else if (gamepad1.a) {
-                if (slideDown) {
-                    slideDown = false;
-                } else {
-                    slideDown = true;
-                    slideUp = false;
-                }
+                slideUp = false;
+                slideDown = true;
+            }
+            else if (gamepad1.b) {
+                slideDown = false;
+                slideUp = false;
             }
 
             if (slideUp) {
@@ -56,7 +52,7 @@ public class LinearSlideManual extends LinearOpMode {
                 telemetry.addData("Direction", "Up");
             }
             else if (slideDown) {
-                linearSlide.setPower((-1.0));
+                linearSlide.setPower(-1.0);
                 telemetry.addData("Direction", "Down");
             }
 

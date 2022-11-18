@@ -49,7 +49,7 @@ public class LinearSlideEncoders extends LinearOpMode {
                 linearSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             }
             else if (gamepad1.a) { //if a is clicked, return to ground
-                linearSlide.setTargetPosition(0);
+                linearSlide.setTargetPosition(-location);
                 linearSlide.setPower(1.0);
                 linearSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             }
@@ -59,12 +59,12 @@ public class LinearSlideEncoders extends LinearOpMode {
 
             //provide updates
             if  (linearSlide.isBusy()) {
-                telemetry.addData("Running:", "%d%n",location);
+                telemetry.addData("Running", location);
             }
             else {
-                telemetry.addData("Stopped:", "%d%n", location);
+                telemetry.addData("Stopped", location);
             }
-            telemetry.addData("Revolutions", "%.2f", location/MOTOR_TICK_COUNT);
+            //telemetry.addData("Revolutions", "%.2f", location/MOTOR_TICK_COUNT);
 
             telemetry.update();
 
