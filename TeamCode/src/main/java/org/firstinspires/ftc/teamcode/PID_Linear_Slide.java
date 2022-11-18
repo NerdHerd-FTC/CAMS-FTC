@@ -74,6 +74,7 @@ public class PID_Linear_Slide extends LinearOpMode {
                 //proportional
                 double P = K_P * error;
                 //integral
+                integralSum *= Math.pow(2, -0.050);
                 integralSum += error * 50;
                 double I = K_I * integralSum;
                 //derivative
