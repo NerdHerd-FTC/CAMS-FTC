@@ -59,10 +59,10 @@ public class LinearSlideEncoders extends LinearOpMode {
 
             //provide updates
             if  (linearSlide.isBusy()) {
-                telemetry.addData("Running:", location);
+                telemetry.addData("Running:", "%d%n",location);
             }
             else {
-                telemetry.addData("Stopped:", location);
+                telemetry.addData("Stopped:", "%d%n", location);
             }
 
             telemetry.update();
