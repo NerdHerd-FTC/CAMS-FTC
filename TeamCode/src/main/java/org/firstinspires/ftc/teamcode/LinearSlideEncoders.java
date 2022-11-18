@@ -64,6 +64,7 @@ public class LinearSlideEncoders extends LinearOpMode {
             else {
                 telemetry.addData("Stopped:", "%d%n", location);
             }
+            telemetry.addData("Revolutions", "%.2f", location/MOTOR_TICK_COUNT);
 
             telemetry.update();
 
