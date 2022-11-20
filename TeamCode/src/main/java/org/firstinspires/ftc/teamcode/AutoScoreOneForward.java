@@ -41,8 +41,8 @@ import com.qualcomm.robotcore.hardware.DcMotor;
  * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
-@Autonomous(name="Auto: Turn Right", group="Robot")
-public class AutoScoreOneTurnRight extends LinearOpMode {
+@Autonomous(name="Auto: Move Forward", group="Robot")
+public class AutoScoreOneForward extends LinearOpMode {
     /* Declare OpMode members. */
     public DcMotor leftDrive = null;
     public DcMotor rightDrive = null;
@@ -76,8 +76,11 @@ public class AutoScoreOneTurnRight extends LinearOpMode {
         // If there are encoders connected, switch to RUN_USING_ENCODER mode for greater accuracy
         leftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
         leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        telemetry.addData("Encoder location:", rightDrive.getCurrentPosition());
         //linearSlide.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         //claw.setPosition(0.0);
 
@@ -90,40 +93,12 @@ public class AutoScoreOneTurnRight extends LinearOpMode {
         waitForStart();
 
         //Move forward 19 ticks
-        while (leftDrive.getCurrentPosition() < 380) {
+        while (rightDrive.getCurrentPosition() < 1524) {
             leftDrive.setPower(0.3);
             rightDrive.setPower(0.3);
+            telemetry.addData("Encoder location:", rightDrive.getCurrentPosition());
             sleep(50);
-        }
-        //Turn 90 degrees (19 ticks) right
-        while (leftDrive.getCurrentPosition() < 980) {
-            leftDrive.setPower(0.3);
-            rightDrive.setPower(-0.3);
-            sleep(50);
-        }
-        //Move forward 30 ticks
-        while (leftDrive.getCurrentPosition() < 1580) {
-            leftDrive.setPower(0.3);
-            rightDrive.setPower(0.3);
-            sleep(50);
-        }
-        //Move backward 19 ticks
-        while (leftDrive.getCurrentPosition() > 1200) {
-            leftDrive.setPower(-0.3);
-            rightDrive.setPower(-0.3);
-            sleep(50);
-        }
-        //Turn 90 degrees (19 ticks) left
-        while (leftDrive.getCurrentPosition() > 600) {
-            leftDrive.setPower(-0.3);
-            rightDrive.setPower(0.3);
-            sleep(50);
-        }
-        //Move forward 50 ticks
-        while (leftDrive.getCurrentPosition() < 1600) {
-            leftDrive.setPower(0.3);
-            rightDrive.setPower(0.3);
-            sleep(50);
+
         }
     }
 }
