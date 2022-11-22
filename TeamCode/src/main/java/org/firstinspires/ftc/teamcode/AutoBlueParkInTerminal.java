@@ -34,7 +34,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
  * Parks robot in terminal
  */
 
-@Autonomous(name="Red: Park In Terminal", group="Robot")
+@Autonomous(name="Blue: Park In Terminal", group="Robot")
 public class AutoBlueParkInTerminal extends LinearOpMode {
     /* Declare OpMode members. */
     public DcMotor leftDrive = null;
@@ -76,15 +76,15 @@ public class AutoBlueParkInTerminal extends LinearOpMode {
             sleep(50);
 
         }
-        //Turn 90 degrees left
-        while (rightDrive.getCurrentPosition() < 980) {
+        //Turn 90 degrees right
+        while (rightDrive.getCurrentPosition() > -220) {
             leftDrive.setPower(0.3);
             rightDrive.setPower(-0.3);
             telemetry.addData("Encoder location:", rightDrive.getCurrentPosition());
             sleep(50);
         }
         //move forward 34.5 inches to reach terminal
-        while (rightDrive.getCurrentPosition() < 2733) {
+        while (rightDrive.getCurrentPosition() < 1533) {
             leftDrive.setPower(0.3);
             rightDrive.setPower(0.3);
             telemetry.addData("Encoder location:", rightDrive.getCurrentPosition());
