@@ -4,17 +4,14 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
-@TeleOp(name="Arm Test", group="Robot")
-public class ArmTest extends LinearOpMode {
+@TeleOp(name="Normal Arm Test", group="Robot")
+public class NormalArmTest extends LinearOpMode {
     /* Declare OpMode members. */
     public DcMotor Arm = null;
 
     @Override
     public void runOpMode() {
-        double max;
-        double ArmPower;
-        final int control = 25;
-        //Control (min 1) gives the driver more control over the free speed motor.
+        double ArmPower = 0;
 
         Arm = hardwareMap.get(DcMotor.class, "MotorC");
 
@@ -31,13 +28,14 @@ public class ArmTest extends LinearOpMode {
         waitForStart();
 
         // run until the end of the match (driver presses STOP)
-        ArmPower = gamepad1.left_stick_y;
         while (opModeIsActive()) {
-            max = Math.abs(Math.pow(ArmPower, 2 * control - 1));
-            if (max > 1.0)
-            {
-                ArmPower /= max;
+            if (gamepad1.right_trigger >= 0.4) {
+                ArmPower = 0.5;
+            } else if (gamepad1.left_trigger >= 0.4) {
+                ArmPower = -0.5;
             }
+
+            Arm.setPower(ArmPower);
             
             telemetry.update();
 

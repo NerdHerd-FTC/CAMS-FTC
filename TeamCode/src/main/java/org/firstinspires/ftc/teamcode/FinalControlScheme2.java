@@ -31,17 +31,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
-/**
- * This particular OpMode executes a POV Game style Teleop for a direct drive robot
- * The code is structured as a LinearOpMode
- *
- * In this mode the left stick moves the robot FWD and back, the Right stick turns left and right.
- * It raises and lowers the arm using the Gamepad Y and A buttons respectively.
- * It also opens and closes the claws slowly using the left and right Bumper buttons.
- *
- * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
- * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
- */
+/** Final Control Scheme using Bumpers for SpeedMult*/
 @TeleOp(name= "Final Control Scheme 2", group="Robot")
 public class FinalControlScheme2 extends LinearOpMode {
     /* Declare OpMode members. */

@@ -29,13 +29,12 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.Servo;
 
 /**
  * Teleop Final Control Scheme - Uses Triggers for Speed Mult
  */
-@TeleOp(name= "Final Control Scheme", group="Robot")
-public class FinalControlScheme extends LinearOpMode {
+@TeleOp(name= "Sumedh: Final Control Scheme", group="Robot")
+public class SumedhFinalControlScheme extends LinearOpMode {
     /* Declare OpMode members. */
     public DcMotor  leftDrive   = null;
     public DcMotor  rightDrive  = null;
@@ -46,10 +45,10 @@ public class FinalControlScheme extends LinearOpMode {
         double right;
         double drive;
         double turn;
-        double speedMult;
+        double speedMult = 0.5;
 
         //Telemetry update variables:
-        String speed;
+        String speed = "Normal";
 
         // Define and Initialize Motors and Servos
         leftDrive  = hardwareMap.get(DcMotor.class, "MotorA");
@@ -75,17 +74,15 @@ public class FinalControlScheme extends LinearOpMode {
             turn  =  gamepad1.right_stick_x;
 
             //Handle speed multiplication
-            if (gamepad1.left_trigger >= 0.4){
-                speedMult = 1;
-                speed = "Fast";
-            }
-            else if (gamepad1.right_trigger >= 0.4){
-                speedMult = 0.25;
-                speed = "Slow";
-            }
-            else {
-                speedMult = 0.5;
-                speed = "Normal";
+            if (gamepad1.a) {
+                if (speedMult <= 0.25) {
+                    speedMult = 0.5;
+                    speed = "Normal";
+                }
+                else {
+                    speedMult = 0.25;
+                    speed = "Slow";
+                }
             }
 
             //Drive!
