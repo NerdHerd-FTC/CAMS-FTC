@@ -11,9 +11,13 @@ import org.openftc.easyopencv.OpenCvPipeline;
 
 public class SleeveDetection extends OpenCvPipeline {
     /*
-    YELLOW  = Parking Left
-    CYAN    = Parking Middle
-    MAGENTA = Parking Right
+    CYAN (0, 255, 255) = Location 1/Left
+    MAGENTA (255, 0, 255) = Location 2/Center
+    YELLOW (255, 255, 0) = Location 3/Right
+
+    SKY BLUE (0, 200, 255) = Location 1/Left
+    PURPLE (200, 0, 255) = Location 2/Center
+    GOLD (255, 200, 0) = Location 3/Right
      */
 
     public enum ParkingPosition {
