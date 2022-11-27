@@ -24,6 +24,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.openftc.apriltag.AprilTagDetection;
@@ -39,6 +40,19 @@ public class SignalDetectionWithMovement extends LinearOpMode
 {
     public DcMotor leftDrive = null;
     public DcMotor rightDrive = null;
+
+    private ElapsedTime runtime = new ElapsedTime();
+
+    // Calculate the COUNTS_PER_INCH for your specific drive train.
+    // Go to your motor vendor website to determine your motor's COUNTS_PER_MOTOR_REV
+    // For external drive gearing, set DRIVE_GEAR_REDUCTION as needed.
+    // For example, use a value of 2.0 for a 12-tooth spur gear driving a 24-tooth spur gear.
+    // This is gearing DOWN for less speed and more torque.
+    // For gearing UP, use a gear ratio less than 1.0. Note this will affect the direction of wheel rotation.
+    static final double     COUNTS_PER_MOTOR_REV    = 28 ;    //UltraPlanetary Gearbox Kit & HD Hex Motor
+    static final double     DRIVE_GEAR_REDUCTION    = 20;   //gear ratio
+    static final double     WHEEL_DIAMETER_INCH     = 3.54331;    // For figuring circumference: 90mm
+    static final double     COUNTS_PER_INCH  = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) / (WHEEL_DIAMETER_INCH * 3.1415);
 
     OpenCvCamera camera;
     AprilTagDetectionPipeline aprilTagDetectionPipeline;
@@ -177,24 +191,9 @@ public class SignalDetectionWithMovement extends LinearOpMode
 
         /* Actually do something useful */
         if(tagOfInterest == null || tagOfInterest.id == LEFT){
-            //trajectory: possibly scrap to switch to REV IMU
-            //Move forward  72 cm (~28.5" = 23.5" + 3" + 2", clear first tile then clear half of junction diameter then 2 inches for clearance)
-            //72*20 = 1440
-            while (rightDrive.getCurrentPosition() < 1440) {
-                leftDrive.setPower(0.3);
-                rightDrive.setPower(0.3);
-                telemetry.addData("Encoder location:", rightDrive.getCurrentPosition());
-                sleep(50);
-            }
-            //Turn 90 degrees (19 ticks) left
-            while (rightDrive.getCurrentPosition() < 900) {
-                leftDrive.setPower(-0.3);
-                rightDrive.setPower(0.3);
-                telemetry.addData("Encoder location:", rightDrive.getCurrentPosition());
-                sleep(50);
-            }
+            //Move forward  ~28.5" = 23.5" + 3" + 2" (clear first tile then clear half of junction diameter then 2 inches for clearance)
+            encoderDrive(0.3, 28.5, 28.5, 0);
         }else if(tagOfInterest.id == MIDDLE){
-            //trajectory: possibly scrap to switch to REV IMU
             //move forward 87 cm (34.25") to sit in the middle of the two tiles in front
             //87 cm * 20 (for our 20:1 gear ratio) = 1740
             while (rightDrive.getCurrentPosition() < 1740) {
@@ -205,6 +204,60 @@ public class SignalDetectionWithMovement extends LinearOpMode
             }
         }else{
             //trajectory
+        }
+    }
+
+    //from RobotAutoDriveByEncoder_Linear example
+    public void encoderDrive(double speed,
+                             double leftInches, double rightInches,
+                             double timeoutS) {
+        int newLeftTarget;
+        int newRightTarget;
+
+        // Ensure that the opmode is still active
+        if (opModeIsActive()) {
+
+            // Determine new target position, and pass to motor controller
+            newLeftTarget = leftDrive.getCurrentPosition() + (int)(leftInches * COUNTS_PER_INCH);
+            newRightTarget = rightDrive.getCurrentPosition() + (int)(rightInches * COUNTS_PER_INCH);
+            leftDrive.setTargetPosition(newLeftTarget);
+            rightDrive.setTargetPosition(newRightTarget);
+
+            // Turn On RUN_TO_POSITION
+            leftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            rightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            // reset the timeout time and start motion.
+            runtime.reset();
+            leftDrive.setPower(Math.abs(speed));
+            rightDrive.setPower(Math.abs(speed));
+
+            // keep looping while we are still active, and there is time left, and both motors are running.
+            // Note: We use (isBusy() && isBusy()) in the loop test, which means that when EITHER motor hits
+            // its target position, the motion will stop.  This is "safer" in the event that the robot will
+            // always end the motion as soon as possible.
+            // However, if you require that BOTH motors have finished their moves before the robot continues
+            // onto the next step, use (isBusy() || isBusy()) in the loop test.
+            while (opModeIsActive() &&
+                    (runtime.seconds() < timeoutS) &&
+                    (leftDrive.isBusy() && rightDrive.isBusy())) {
+
+                // Display it for the driver.
+                telemetry.addData("Running to",  " %7d :%7d", newLeftTarget,  newRightTarget);
+                telemetry.addData("Currently at",  " at %7d :%7d",
+                        leftDrive.getCurrentPosition(), rightDrive.getCurrentPosition());
+                telemetry.update();
+            }
+
+            // Stop all motion;
+            leftDrive.setPower(0);
+            rightDrive.setPower(0);
+
+            // Turn off RUN_TO_POSITION
+            leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+            sleep(250);   // optional pause after each move.
         }
     }
 }
