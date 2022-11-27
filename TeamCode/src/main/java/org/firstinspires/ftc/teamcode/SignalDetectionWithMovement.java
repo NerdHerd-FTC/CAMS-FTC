@@ -189,21 +189,24 @@ public class SignalDetectionWithMovement extends LinearOpMode
         }
         telemetry.update();
 
-        /* Actually do something useful */
+        //go to location
         if(tagOfInterest == null || tagOfInterest.id == LEFT){
-            //Move forward  ~28.5" = 23.5" + 3" + 2" (clear first tile then clear half of junction diameter then 2 inches for clearance)
-            encoderDrive(0.3, 28.5, 28.5, 0);
+            //Move forward ~28.5" = 23.5" + 3" + 2" (clear first tile then clear half of junction diameter then 2 inches for clearance)
+            encoderDrive(0.3, 28.5, 28.5, 1);
+            //turn 90 degrees left
+            encoderDrive(0.3, -18.6971, 18.6971, 1);
+            //move forward ~24" 
+            encoderDrive(0.3, 24, 24, 0);
         }else if(tagOfInterest.id == MIDDLE){
             //move forward 87 cm (34.25") to sit in the middle of the two tiles in front
-            //87 cm * 20 (for our 20:1 gear ratio) = 1740
-            while (rightDrive.getCurrentPosition() < 1740) {
-                leftDrive.setPower(0.3);
-                rightDrive.setPower(0.3);
-                telemetry.addData("Encoder location:", rightDrive.getCurrentPosition());
-                sleep(50);
-            }
+            encoderDrive(0.3, 34.25, 34.25, 0);
         }else{
-            //trajectory
+            //Move forward ~28.5" = 23.5" + 3" + 2" (clear first tile then clear half of junction diameter then 2 inches for clearance)
+            encoderDrive(0.3, 28.5, 28.5, 1);
+            //turn 90 degrees right
+            encoderDrive(0.3, 18.6971, -18.6971, 1);
+            //move forward ~19"
+            encoderDrive(0.3, 19, 19, 0);
         }
     }
 
