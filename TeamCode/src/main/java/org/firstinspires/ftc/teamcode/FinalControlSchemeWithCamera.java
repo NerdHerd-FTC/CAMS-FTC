@@ -31,6 +31,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.teamcode.Archive.SleeveDetection;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
@@ -40,11 +41,13 @@ import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvPipeline;
 import org.openftc.easyopencv.OpenCvWebcam;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 /**
  * Teleop Final Control Scheme - Uses Triggers for Speed Mult - with camera
  */
 @TeleOp(name= "Final Control Scheme with Camera", group="Robot")
+@Disabled
 public class FinalControlSchemeWithCamera extends LinearOpMode {
     /* Declare OpMode members. */
     public DcMotor leftDrive = null;

@@ -1,12 +1,14 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.Archive;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 //UNTESTED!!
 
 @TeleOp(name="Linear Slide with Encoders", group="Robot")
+@Disabled
 public class LinearSlideEncoders extends LinearOpMode {
     /* Declare OpMode members. */
     public DcMotor linearSlide;

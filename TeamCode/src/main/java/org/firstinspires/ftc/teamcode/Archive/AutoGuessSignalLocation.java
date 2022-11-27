@@ -25,15 +25,17 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.Archive;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 /**
  * Guesses that the signal cone is in Location 2 - expected value, assuming use of custom signal: 20/6=6.33 points
  */
 @Autonomous(name="Guess Signal in Location 2", group="Robot")
+@Disabled
 public class AutoGuessSignalLocation extends LinearOpMode {
     /* Declare OpMode members. */
     public DcMotor leftDrive = null;

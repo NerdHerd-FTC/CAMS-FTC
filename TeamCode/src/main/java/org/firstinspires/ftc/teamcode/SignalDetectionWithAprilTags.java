@@ -23,24 +23,22 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.openftc.apriltag.AprilTagDetection;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
-import org.openftc.easyopencv.OpenCvInternalCamera;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
-@Autonomous(name="Signal Detection with AT", group="Robot")
-public class AprilTagAutonomousInitDetectionExample extends LinearOpMode
+@Autonomous(name="Signal Detection Testing", group="Robot")
+public class SignalDetectionWithAprilTags extends LinearOpMode
 {
     OpenCvCamera camera;
     AprilTagDetectionPipeline aprilTagDetectionPipeline;
-
-    static final double FEET_PER_METER = 3.28084;
 
     // Lens intrinsics
     // UNITS ARE PIXELS
@@ -50,14 +48,14 @@ public class AprilTagAutonomousInitDetectionExample extends LinearOpMode
     double fy = 578.272;
     double cx = 402.145;
     double cy = 221.506;
+    double tagsize = 0.166; //meters
 
-    // UNITS ARE METERS
-    double tagsize = 0.166;
+    //above are used for trajectory, not identification; not really useful for us
 
-     // Tag ID 1,2,3 from the 36h11 family
-    int LEFT = 1;
-    int MIDDLE = 2;
-    int RIGHT = 3;
+     // Tag ID 121, 122, 123 from the 36h11 family
+    int LEFT = 121;
+    int MIDDLE = 122;
+    int RIGHT = 123;
 
     AprilTagDetection tagOfInterest = null;
 
@@ -76,11 +74,10 @@ public class AprilTagAutonomousInitDetectionExample extends LinearOpMode
             {
                 camera.startStreaming(800,448, OpenCvCameraRotation.UPRIGHT);
             }
-
             @Override
             public void onError(int errorCode)
             {
-                telemetry.addData("CAMERA ERROR", errorCode);
+                telemetry.addData("CAMERA ERROR=%d", errorCode);
             }
         });
 
@@ -110,37 +107,30 @@ public class AprilTagAutonomousInitDetectionExample extends LinearOpMode
 
                 if(tagFound)
                 {
-                    telemetry.addLine("Tag of interest is in sight!\n\nLocation data:");
-                    tagToTelemetry(tagOfInterest);
+                    telemetry.addLine(String.format(Locale.US, "Detected tag ID: %d", tagOfInterest.id));
                 }
                 else
                 {
-                    telemetry.addLine("Don't see tag of interest :(");
-
                     if(tagOfInterest == null)
                     {
-                        telemetry.addLine("(The tag has never been seen)");
+                        telemetry.addLine("A tag? Nope, never seen one before.");
                     }
                     else
                     {
-                        telemetry.addLine("\nBut we HAVE seen the tag before; last seen at:");
-                        tagToTelemetry(tagOfInterest);
+                        telemetry.addLine(String.format(Locale.US, "Hmm... The last tag I saw was tag %d, but it was a while ago!", tagOfInterest.id));
                     }
                 }
 
             }
             else
             {
-                telemetry.addLine("Don't see tag of interest :(");
-
                 if(tagOfInterest == null)
                 {
-                    telemetry.addLine("(The tag has never been seen)");
+                    telemetry.addLine("A tag? Nope, never seen one before.");
                 }
                 else
                 {
-                    telemetry.addLine("\nBut we HAVE seen the tag before; last seen at:");
-                    tagToTelemetry(tagOfInterest);
+                    telemetry.addLine(String.format(Locale.US, "Hmm... The last tag I saw was tag %d, but it was a while ago!", tagOfInterest.id));
                 }
 
             }
@@ -158,15 +148,13 @@ public class AprilTagAutonomousInitDetectionExample extends LinearOpMode
         /* Update the telemetry */
         if(tagOfInterest != null)
         {
-            telemetry.addLine("Tag snapshot:\n");
-            tagToTelemetry(tagOfInterest);
-            telemetry.update();
+            telemetry.addLine(String.format(Locale.US, "Located tag %d!", tagOfInterest.id));
         }
         else
         {
-            telemetry.addLine("No tag snapshot available, it was never sighted during the init loop :(");
-            telemetry.update();
+            telemetry.addLine("No tag found... Let's guess!");
         }
+        telemetry.update();
 
         /* Actually do something useful */
         if(tagOfInterest == null || tagOfInterest.id == LEFT){
@@ -176,16 +164,5 @@ public class AprilTagAutonomousInitDetectionExample extends LinearOpMode
         }else{
             //trajectory
         }
-    }
-
-    void tagToTelemetry(AprilTagDetection detection)
-    {
-        telemetry.addLine(String.format("\nDetected tag ID=%d", detection.id));
-        telemetry.addLine(String.format("Translation X: %.2f feet", detection.pose.x*FEET_PER_METER));
-        telemetry.addLine(String.format("Translation Y: %.2f feet", detection.pose.y*FEET_PER_METER));
-        telemetry.addLine(String.format("Translation Z: %.2f feet", detection.pose.z*FEET_PER_METER));
-        telemetry.addLine(String.format("Rotation Yaw: %.2f degrees", Math.toDegrees(detection.pose.yaw)));
-        telemetry.addLine(String.format("Rotation Pitch: %.2f degrees", Math.toDegrees(detection.pose.pitch)));
-        telemetry.addLine(String.format("Rotation Roll: %.2f degrees", Math.toDegrees(detection.pose.roll)));
     }
 }
