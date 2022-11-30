@@ -4,8 +4,8 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
-@TeleOp(name="Normal Arm Test", group="Robot")
-public class NormalArmTest extends LinearOpMode {
+@TeleOp(name="Arm and Claw Test", group="Robot")
+public class ArmClawTest extends LinearOpMode {
     /* Declare OpMode members. */
     public DcMotor Arm = null;
 

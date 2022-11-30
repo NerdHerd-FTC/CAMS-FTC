@@ -195,7 +195,7 @@ public class SignalDetectionWithMovement extends LinearOpMode
             encoderDrive(0.3, 28.5, 28.5, 1);
             //turn 90 degrees left
             encoderDrive(0.3, -18.6971, 18.6971, 1);
-            //move forward ~24" 
+            //move forward ~24"
             encoderDrive(0.3, 24, 24, 0);
         }else if(tagOfInterest.id == MIDDLE){
             //move forward 87 cm (34.25") to sit in the middle of the two tiles in front
