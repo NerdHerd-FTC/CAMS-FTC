@@ -38,6 +38,8 @@ public class SumedhFinalControlScheme extends LinearOpMode {
     /* Declare OpMode members. */
     public DcMotor  leftDrive   = null;
     public DcMotor  rightDrive  = null;
+    public DcMotor  RVAMotor1   = null;
+    public DcMotor  RVAMotor2  = null;
 
     @Override
     public void runOpMode() {
@@ -46,6 +48,7 @@ public class SumedhFinalControlScheme extends LinearOpMode {
         double drive;
         double turn;
         double speedMult = 0.5;
+        double ArmPower;
 
         //Telemetry update variables:
         String speed = "Normal";
@@ -53,12 +56,16 @@ public class SumedhFinalControlScheme extends LinearOpMode {
         // Define and Initialize Motors and Servos
         leftDrive  = hardwareMap.get(DcMotor.class, "MotorA");
         rightDrive = hardwareMap.get(DcMotor.class, "MotorB");
+        RVAMotor1  = hardwareMap.get(DcMotor.class, "MotorC");
+        RVAMotor2 = hardwareMap.get(DcMotor.class, "MotorD");
 
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
         // Note: The settings here assume direct drive on left and right wheels.  Gear Reduction or 90 Deg drives may require direction flips
         leftDrive.setDirection(DcMotor.Direction.REVERSE);
         rightDrive.setDirection(DcMotor.Direction.FORWARD);
+        RVAMotor1.setDirection(DcMotor.Direction.FORWARD);
+        RVAMotor2.setDirection(DcMotor.Direction.REVERSE);
 
         // Send telemetry message to signify robot waiting;
         telemetry.addData(">", "Robot Ready.  Press Play.");    //
@@ -84,6 +91,19 @@ public class SumedhFinalControlScheme extends LinearOpMode {
                     speed = "Slow";
                 }
             }
+
+            //Handle speed multiplication
+            if (gamepad1.left_trigger >= 0.4){
+                ArmPower = -0.4;
+            }
+            else if (gamepad1.right_trigger >= 0.4){
+                ArmPower = 0.4;
+            }
+            else {
+                ArmPower = 0;
+            }
+            RVAMotor1.setPower(ArmPower);
+            RVAMotor2.setPower(ArmPower);
 
             //Drive!
             // Combine drive and turn for blended motion.
