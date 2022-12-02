@@ -5,10 +5,11 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 
-@TeleOp(name="Single Motor Test", group="Robot")
-public class OneMotorTest extends LinearOpMode {
+@TeleOp(name="Dual Motor Test", group="Robot")
+public class DualMotorTest extends LinearOpMode {
     /* Declare OpMode members. */
     public DcMotor leftDrive   = null;
+    public DcMotor rightDrive = null;
 
     @Override
     public void runOpMode() {
@@ -19,13 +20,16 @@ public class OneMotorTest extends LinearOpMode {
 
         // Define and Initialize Motors
         leftDrive  = hardwareMap.get(DcMotor.class, "MotorA");
+        rightDrive  = hardwareMap.get(DcMotor.class, "MotorB");
 
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
         // Note: The settings here assume direct drive on left and right wheels.  Gear Reduction or 90 Deg drives may require direction flips
         leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
         leftDrive.setDirection(DcMotor.Direction.REVERSE);
-        //rightDrive.setDirection(DcMotor.Direction.FORWARD);
+        rightDrive.setDirection(DcMotor.Direction.FORWARD);
 
         // Send telemetry message to signify robot waiting;
         telemetry.addData(">", "Robot Ready.  Press Play.");    //
@@ -45,14 +49,15 @@ public class OneMotorTest extends LinearOpMode {
             if (max > 1.0)
             {
                 left /= max;
-                //right /= max;
             }
 
             // Output the safe vales to the motor drives.
             leftDrive.setPower(left);
+            rightDrive.setPower(left);
 
             telemetry.addData("Power",  "%.2f", left);
-            telemetry.addData("Encoder",  "%d", leftDrive.getCurrentPosition());
+            telemetry.addData("Left Encoder",  "%d", leftDrive.getCurrentPosition());
+            telemetry.addData("Right Encoder",  "%d", rightDrive.getCurrentPosition());
 
             telemetry.update();
 
