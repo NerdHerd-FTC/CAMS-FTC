@@ -41,11 +41,11 @@ public class ReverseVirtualArmTest extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        double power = 0.1;
+        double ArmPower = 0;
 
         // Define and Initialize Motors and Servos
-        RVAMotor1  = hardwareMap.get(DcMotor.class, "MotorA");
-        RVAMotor2 = hardwareMap.get(DcMotor.class, "MotorB");
+        RVAMotor1  = hardwareMap.get(DcMotor.class, "MotorC");
+        RVAMotor2 = hardwareMap.get(DcMotor.class, "MotorD");
 
         //core hex motors are facing opposite each other and will rotate in opposite directions
         RVAMotor1.setDirection(DcMotor.Direction.FORWARD);
@@ -58,10 +58,19 @@ public class ReverseVirtualArmTest extends LinearOpMode {
         waitForStart();
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
-            RVAMotor1.setPower(power);
-            RVAMotor2.setPower(power);
+            if (gamepad1.left_trigger >= 0.4){
+                ArmPower = -0.4;
+            }
+            else if (gamepad1.right_trigger >= 0.4){
+                ArmPower = 0.4;
+            }
+            else {
+                ArmPower = 0;
+            }
+            RVAMotor1.setPower(ArmPower);
+            RVAMotor2.setPower(ArmPower);
 
-            telemetry.addData("Power: ", "%.2f", power);
+            telemetry.addData("Power: ", "%.2f", ArmPower);
             telemetry.update();
             // Pace this loop so jaw action is reasonable speed.
             sleep(50);

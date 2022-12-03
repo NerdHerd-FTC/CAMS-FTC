@@ -51,7 +51,7 @@ public class SignalDetectionWithMovement extends LinearOpMode
     // For gearing UP, use a gear ratio less than 1.0. Note this will affect the direction of wheel rotation.
     static final double     COUNTS_PER_MOTOR_REV    = 28 ;    //UltraPlanetary Gearbox Kit & HD Hex Motor
     static final double     DRIVE_GEAR_REDUCTION    = 20;   //gear ratio
-    static final double     WHEEL_DIAMETER_INCH     = 3.54331;    // For figuring circumference: 90mm
+    static final double     WHEEL_DIAMETER_INCH     = 9;    // For figuring circumference: 90mm
     static final double     COUNTS_PER_INCH  = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) / (WHEEL_DIAMETER_INCH * 3.1415);
 
     OpenCvCamera camera;
@@ -192,28 +192,26 @@ public class SignalDetectionWithMovement extends LinearOpMode
         //go to location
         if(tagOfInterest == null || tagOfInterest.id == LEFT){
             //Move forward ~28.5" = 23.5" + 3" + 2" (clear first tile then clear half of junction diameter then 2 inches for clearance)
-            encoderDrive(0.3, 28.5, 28.5, 1);
+            encoderDrive(0.1, 28.5, 28.5);
             //turn 90 degrees left
-            encoderDrive(0.3, -18.6971, 18.6971, 1);
+            encoderDrive(0.1, -18.6971, 18.6971);
             //move forward ~24"
-            encoderDrive(0.3, 24, 24, 0);
+            encoderDrive(0.1, 24, 24);
         }else if(tagOfInterest.id == MIDDLE){
             //move forward 87 cm (34.25") to sit in the middle of the two tiles in front
-            encoderDrive(0.3, 34.25, 34.25, 0);
+            encoderDrive(0.1, 34, 34);
         }else{
             //Move forward ~28.5" = 23.5" + 3" + 2" (clear first tile then clear half of junction diameter then 2 inches for clearance)
-            encoderDrive(0.3, 28.5, 28.5, 1);
+            encoderDrive(0.1, 28.5, 28.5);
             //turn 90 degrees right
-            encoderDrive(0.3, 18.6971, -18.6971, 1);
+            encoderDrive(0.1, 18.6971, -18.6971);
             //move forward ~19"
-            encoderDrive(0.3, 19, 19, 0);
+            encoderDrive(0.1, 19, 19);
         }
     }
 
     //from RobotAutoDriveByEncoder_Linear example
-    public void encoderDrive(double speed,
-                             double leftInches, double rightInches,
-                             double timeoutS) {
+    public void encoderDrive(double speed, double leftInches, double rightInches) {
         int newLeftTarget;
         int newRightTarget;
 
@@ -230,8 +228,6 @@ public class SignalDetectionWithMovement extends LinearOpMode
             leftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             rightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-            // reset the timeout time and start motion.
-            runtime.reset();
             leftDrive.setPower(Math.abs(speed));
             rightDrive.setPower(Math.abs(speed));
 
@@ -242,7 +238,6 @@ public class SignalDetectionWithMovement extends LinearOpMode
             // However, if you require that BOTH motors have finished their moves before the robot continues
             // onto the next step, use (isBusy() || isBusy()) in the loop test.
             while (opModeIsActive() &&
-                    (runtime.seconds() < timeoutS) &&
                     (leftDrive.isBusy() && rightDrive.isBusy())) {
 
                 // Display it for the driver.
