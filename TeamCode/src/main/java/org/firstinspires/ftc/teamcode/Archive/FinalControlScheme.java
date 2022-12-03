@@ -25,25 +25,34 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.firstinspires.ftc.teamcode;
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+package org.firstinspires.ftc.teamcode.Archive;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
 
 /**
- * Parks robot in terminal
+ * Teleop Final Control Scheme - Uses Triggers for Speed Mult
  */
-
-@Autonomous(name="Red: Park In Terminal", group="Robot")
-public class AutoRedParkInTerminal extends LinearOpMode {
+@TeleOp(name= "Final Control Scheme", group="Robot")
+public class FinalControlScheme extends LinearOpMode {
     /* Declare OpMode members. */
-    public DcMotor leftDrive = null;
-    public DcMotor rightDrive = null;
+    public DcMotor  leftDrive   = null;
+    public DcMotor  rightDrive  = null;
 
     @Override
     public void runOpMode() {
+        double left;
+        double right;
+        double drive;
+        double turn;
+        double speedMult;
+
+        //Telemetry update variables:
+        String speed;
+
         // Define and Initialize Motors and Servos
-        leftDrive = hardwareMap.get(DcMotor.class, "MotorA");
+        leftDrive  = hardwareMap.get(DcMotor.class, "MotorA");
         rightDrive = hardwareMap.get(DcMotor.class, "MotorB");
 
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
@@ -51,42 +60,55 @@ public class AutoRedParkInTerminal extends LinearOpMode {
         // Note: The settings here assume direct drive on left and right wheels.  Gear Reduction or 90 Deg drives may require direction flips
         leftDrive.setDirection(DcMotor.Direction.REVERSE);
         rightDrive.setDirection(DcMotor.Direction.FORWARD);
-        //linearSlide.setDirection(DcMotor.Direction.FORWARD);
-        // If there are encoders connected, switch to RUN_USING_ENCODER mode for greater accuracy
-        leftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-        telemetry.addData("Encoder location:", rightDrive.getCurrentPosition());
 
         // Send telemetry message to signify robot waiting;
         telemetry.addData(">", "Robot Ready.  Press Play.");    //
         telemetry.update();
-
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
+        // run until the end of the match (driver presses STOP)
+        while (opModeIsActive()) {
+            // Run wheels in POV mode (note: The joystick goes negative when pushed forward, so negate it)
+            // In this mode the Left stick moves the robot fwd and back, the Right stick turns left and right.
+            // This way it's also easy to just drive straight, or just turn.
+            drive = -1 * gamepad1.left_stick_y;
+            turn  =  gamepad1.right_stick_x;
 
-        //Move forward 19 cm
-        while (rightDrive.getCurrentPosition() < 380) {
-            leftDrive.setPower(0.3);
-            rightDrive.setPower(0.3);
-            telemetry.addData("Encoder location:", rightDrive.getCurrentPosition());
-            sleep(50);
-        }
-        //Turn 90 degrees left
-        while (rightDrive.getCurrentPosition() < 980) {
-            leftDrive.setPower(-0.3);
-            rightDrive.setPower(0.3);
-            telemetry.addData("Encoder location:", rightDrive.getCurrentPosition());
-            sleep(50);
-        }
-        //move forward 34.5 inches to reach terminal
-        while (rightDrive.getCurrentPosition() < 2733) {
-            leftDrive.setPower(0.3);
-            rightDrive.setPower(0.3);
-            telemetry.addData("Encoder location:", rightDrive.getCurrentPosition());
+            //Handle speed multiplication
+            if (gamepad1.left_trigger >= 0.4){
+                speedMult = 1;
+                speed = "Fast";
+            }
+            else if (gamepad1.right_trigger >= 0.4){
+                speedMult = 0.25;
+                speed = "Slow";
+            }
+            else {
+                speedMult = 0.5;
+                speed = "Normal";
+            }
+
+            //Drive!
+            // Combine drive and turn for blended motion.
+            left = drive + turn;
+            right = drive - turn;
+            // Normalize the values so neither exceed +/FinalControlScheme- 1.0
+            if (left > 1.0) {
+                left = 1.0;
+            }
+            if (right > 1.0){
+                right = 1.0;
+            }
+            // Output the safe vales to the motor drives.
+            leftDrive.setPower(Math.pow(left, 3) * speedMult);
+            rightDrive.setPower(Math.pow(right, 3) * speedMult);
+
+            // Send telemetry message to signify robot running;
+            telemetry.addData("Speed: ", "String", speed);
+            telemetry.addData("Stick X: ",  "%.2f", turn);
+            telemetry.addData("Stick Y: ", "%.2f", (drive * -1));
+            telemetry.update();
+            // Pace this loop so jaw action is reasonable speed.
             sleep(50);
         }
     }

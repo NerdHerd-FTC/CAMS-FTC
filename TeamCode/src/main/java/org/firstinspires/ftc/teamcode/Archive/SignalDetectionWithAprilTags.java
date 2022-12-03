@@ -17,15 +17,17 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- */
 
-package org.firstinspires.ftc.teamcode;
+
+package org.firstinspires.ftc.teamcode.Archive;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.teamcode.AprilTagDetectionPipeline;
 import org.openftc.apriltag.AprilTagDetection;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
@@ -35,10 +37,11 @@ import java.util.ArrayList;
 import java.util.Locale;
 
 @Autonomous(name="Signal Detection Testing", group="Robot")
+@Disabled
 public class SignalDetectionWithAprilTags extends LinearOpMode
 {
     OpenCvCamera camera;
-    AprilTagDetectionPipeline aprilTagDetectionPipeline;
+    //AprilTagDetectionPipeline aprilTagDetectionPipeline;
 
     // Lens intrinsics
     // UNITS ARE PIXELS
@@ -83,10 +86,10 @@ public class SignalDetectionWithAprilTags extends LinearOpMode
 
         telemetry.setMsTransmissionInterval(50);
 
-        /*
+
          * The INIT-loop:
          * This REPLACES waitForStart!
-         */
+
         while (!isStarted() && !isStopRequested())
         {
             ArrayList<AprilTagDetection> currentDetections = aprilTagDetectionPipeline.getLatestDetections();
@@ -140,12 +143,12 @@ public class SignalDetectionWithAprilTags extends LinearOpMode
         }
 
 
-        /*
+
          * The START command just came in: now work off the latest snapshot acquired
          * during the init loop.
-         */
 
-        /* Update the telemetry */
+
+        /* Update the telemetry
         if(tagOfInterest != null)
         {
             telemetry.addLine(String.format(Locale.US, "Located tag %d!", tagOfInterest.id));
@@ -156,7 +159,7 @@ public class SignalDetectionWithAprilTags extends LinearOpMode
         }
         telemetry.update();
 
-        /* Actually do something useful */
+        /* Actually do something useful
         if(tagOfInterest == null || tagOfInterest.id == LEFT){
             //trajectory
         }else if(tagOfInterest.id == MIDDLE){
@@ -166,3 +169,4 @@ public class SignalDetectionWithAprilTags extends LinearOpMode
         }
     }
 }
+*/

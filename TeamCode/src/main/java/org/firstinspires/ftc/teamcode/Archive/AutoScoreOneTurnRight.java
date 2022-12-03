@@ -25,27 +25,50 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.Archive;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 /**
- * Parks robot in terminal
+ * This particular OpMode executes a POV Game style Teleop for a direct drive robot
+ * The code is structured as a LinearOpMode
+ *
+ * In this mode the left stick moves the robot FWD and back, the Right stick turns left and right.
+ * It raises and lowers the arm using the Gamepad Y and A buttons respectively.
+ * It also opens and closes the claws slowly using the left and right Bumper buttons.
+ *
+ * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
+ * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
-
-@Autonomous(name="Blue: Park In Terminal", group="Robot")
-public class AutoBlueParkInTerminal extends LinearOpMode {
+@Autonomous(name="Auto: Turn Right", group="Robot")
+@Disabled
+public class AutoScoreOneTurnRight extends LinearOpMode {
     /* Declare OpMode members. */
     public DcMotor leftDrive = null;
     public DcMotor rightDrive = null;
+    public DcMotor linearSlide = null;
+    //public Servo claw = null;
+
+    public static final double MIN_POSITION = 0.0;
+    public static final double MAX_POSITION = 0.5;
 
     @Override
     public void runOpMode() {
+        double left;
+        double right;
+        double drive;
+        double turn;
+
+        //Telemetry update variables:
+
         // Define and Initialize Motors and Servos
         leftDrive = hardwareMap.get(DcMotor.class, "MotorA");
         rightDrive = hardwareMap.get(DcMotor.class, "MotorB");
-
+        //linearSlide = hardwareMap.get(DcMotor.class, "MotorC");
+        //claw = hardwareMap.get(Servo.class, "ServoA");
+        //leftArm    = hardwareMap.get(DcMotor.class, "left_arm");
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
         // Note: The settings here assume direct drive on left and right wheels.  Gear Reduction or 90 Deg drives may require direction flips
@@ -55,39 +78,53 @@ public class AutoBlueParkInTerminal extends LinearOpMode {
         // If there are encoders connected, switch to RUN_USING_ENCODER mode for greater accuracy
         leftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
         leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-        telemetry.addData("Encoder location:", rightDrive.getCurrentPosition());
+        //linearSlide.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        //claw.setPosition(0.0);
 
         // Send telemetry message to signify robot waiting;
         telemetry.addData(">", "Robot Ready.  Press Play.");    //
         telemetry.update();
 
+
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
 
-        //Move forward 19 cm
-        while (rightDrive.getCurrentPosition() < 380) {
+        //Move forward 19 ticks
+        while (leftDrive.getCurrentPosition() < 380) {
             leftDrive.setPower(0.3);
             rightDrive.setPower(0.3);
-            telemetry.addData("Encoder location:", rightDrive.getCurrentPosition());
             sleep(50);
-
         }
-        //Turn 90 degrees right
-        while (rightDrive.getCurrentPosition() > -220) {
+        //Turn 90 degrees (19 ticks) right
+        while (leftDrive.getCurrentPosition() < 980) {
             leftDrive.setPower(0.3);
             rightDrive.setPower(-0.3);
-            telemetry.addData("Encoder location:", rightDrive.getCurrentPosition());
             sleep(50);
         }
-        //move forward 34.5 inches to reach terminal
-        while (rightDrive.getCurrentPosition() < 1533) {
+        //Move forward 30 ticks
+        while (leftDrive.getCurrentPosition() < 1580) {
             leftDrive.setPower(0.3);
             rightDrive.setPower(0.3);
-            telemetry.addData("Encoder location:", rightDrive.getCurrentPosition());
+            sleep(50);
+        }
+        //Move backward 19 ticks
+        while (leftDrive.getCurrentPosition() > 1200) {
+            leftDrive.setPower(-0.3);
+            rightDrive.setPower(-0.3);
+            sleep(50);
+        }
+        //Turn 90 degrees (19 ticks) left
+        while (leftDrive.getCurrentPosition() > 600) {
+            leftDrive.setPower(-0.3);
+            rightDrive.setPower(0.3);
+            sleep(50);
+        }
+        //Move forward 50 ticks
+        while (leftDrive.getCurrentPosition() < 1600) {
+            leftDrive.setPower(0.3);
+            rightDrive.setPower(0.3);
             sleep(50);
         }
     }
