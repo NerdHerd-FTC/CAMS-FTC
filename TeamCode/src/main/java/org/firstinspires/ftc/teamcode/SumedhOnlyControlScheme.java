@@ -58,10 +58,9 @@ public class SumedhOnlyControlScheme extends LinearOpMode {
         double SPEED_MULT = 0.5;
 
         double ArmPower;
-        double wristTarget = 0;
-        double palmTarget = 0;
-        final double CLAW_SPEED = 0.2; //strictly less than 1
-
+        double fingerTarget = 0.7;
+        double wristTarget = 0.3;
+        final double CLAW_SPEED = 0.05; //strictly less than 1
 
         //Telemetry update variables:
         String speed = "Normal";
@@ -86,7 +85,12 @@ public class SumedhOnlyControlScheme extends LinearOpMode {
         RVAMotor1.setDirection(DcMotor.Direction.FORWARD);
         RVAMotor2.setDirection(DcMotor.Direction.REVERSE);
 
+        clawFinger.setPosition(0.7);
+        clawPalm.setPosition(0.2);
+        clawWrist.setPosition(0.3);
+
         runtime.reset();
+
 
         // Send telemetry message to signify robot waiting;
         telemetry.addData(">", "Robot Ready.  Press Play.");    //
@@ -144,28 +148,24 @@ public class SumedhOnlyControlScheme extends LinearOpMode {
 
             //HANDLE CLAW
             //Wrist movement
-            double wrist = -1 * gamepad2.left_stick_y;
-            double palm = gamepad2.right_stick_x;
 
             //Handle claw open and close
-            if (gamepad2.left_trigger >= 0.4){
+            if (gamepad1.right_bumper){
                 clawFinger.setPosition(0); //close
             }
-            else if (gamepad2.right_trigger >= 0.4){
+            else if (gamepad1.left_bumper){
                 clawFinger.setPosition(1); //open
                 fingerPos = "Open";
             }
 
             //Raise or lower claw
-            if (Math.abs(wrist) >= 0.2){
-                wristTarget += wrist * CLAW_SPEED;
+            if (gamepad1.dpad_up){
+                wristTarget += CLAW_SPEED;
+            }
+            else if (gamepad1.dpad_down){
+                wristTarget -= CLAW_SPEED;
             }
             clawWrist.setPosition(wristTarget);
-
-            if (Math.abs(palm) >= 0.2){
-                palmTarget += palm * CLAW_SPEED;
-            }
-            clawPalm.setPosition(palmTarget);
 
             // Send telemetry message to signify robot running;
             telemetry.addData("Speed: ", "String", speed);
