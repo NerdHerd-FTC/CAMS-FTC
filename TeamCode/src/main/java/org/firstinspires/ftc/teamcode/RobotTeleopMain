@@ -55,6 +55,7 @@ public class RobotTeleopMain extends LinearOpMode {
     public DcMotor  MotorA   = null;
     public DcMotor  MotorB  = null;
     public DcMotor MotorC = null;
+    public DcMotor MotorD = null;
     public Servo Servo1 = null;
 
 
@@ -76,20 +77,28 @@ public class RobotTeleopMain extends LinearOpMode {
         int minLift = -517;
         int maxLift = 517;
         int targetPositionLift;
+        int targetPositionLift2;
 
         // Define and Initialize Motors
         MotorA  = hardwareMap.get(DcMotor.class, "MotorA");
         MotorB = hardwareMap.get(DcMotor.class, "MotorB");
         MotorC  = hardwareMap.get(DcMotor.class, "MotorC");
+        MotorD  = hardwareMap.get(DcMotor.class, "Motord");
         Servo1 = hardwareMap.get(Servo.class, "Servo1");
 
         MotorA.setDirection(DcMotor.Direction.REVERSE);
         MotorB.setDirection(DcMotor.Direction.FORWARD);
         MotorC.setDirection(DcMotor.Direction.FORWARD);
+        MotorD.setDirection(DcMotor.Direction.REVERSE);
+
 
         MotorC.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         MotorC.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         MotorC.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        MotorD.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        MotorD.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        MotorD.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         targetPositionLift = MotorC.getCurrentPosition();
 
@@ -158,8 +167,11 @@ public class RobotTeleopMain extends LinearOpMode {
                 targetPositionLift = minLift;
             }
             MotorC.setTargetPosition(targetPositionLift);
+            MotorD.setTargetPosition(-targetPositionLift);
             MotorC.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            MotorD.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             MotorC.setPower(0.8);
+            MotorD.setPower(0.8);
 
 
 
