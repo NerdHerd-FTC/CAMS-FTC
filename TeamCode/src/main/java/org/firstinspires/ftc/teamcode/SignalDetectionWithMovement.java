@@ -51,7 +51,7 @@ public class SignalDetectionWithMovement extends LinearOpMode
     // For gearing UP, use a gear ratio less than 1.0. Note this will affect the direction of wheel rotation.
     static final double     COUNTS_PER_MOTOR_REV    = 28 ;    //UltraPlanetary Gearbox Kit & HD Hex Motor
     static final double     DRIVE_GEAR_REDUCTION    = 20;   //gear ratio
-    static final double     WHEEL_DIAMETER_INCH     = 9;    // For figuring circumference: 90mm
+    static final double     WHEEL_DIAMETER_INCH     = 3.5;    // For figuring circumference: 90mm
     static final double     COUNTS_PER_INCH  = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) / (WHEEL_DIAMETER_INCH * 3.1415);
 
     OpenCvCamera camera;
@@ -192,21 +192,21 @@ public class SignalDetectionWithMovement extends LinearOpMode
         //go to location
         if(tagOfInterest == null || tagOfInterest.id == LEFT){
             //Move forward ~28.5" = 23.5" + 3" + 2" (clear first tile then clear half of junction diameter then 2 inches for clearance)
-            encoderDrive(0.1, 28.5, 28.5);
-            //turn 90 degrees left
-            encoderDrive(0.1, -18.6971, 18.6971);
-            //move forward ~24"
             encoderDrive(0.1, 24, 24);
+            //turn 90 degrees left
+            encoderDrive(0.1, -11, 11);
+            //move forward ~24"
+            encoderDrive(0.1, 23, 23);
         }else if(tagOfInterest.id == MIDDLE){
             //move forward 87 cm (34.25") to sit in the middle of the two tiles in front
             encoderDrive(0.1, 34, 34);
         }else{
             //Move forward ~28.5" = 23.5" + 3" + 2" (clear first tile then clear half of junction diameter then 2 inches for clearance)
-            encoderDrive(0.1, 28.5, 28.5);
+            encoderDrive(0.1, 23, 23);
             //turn 90 degrees right
-            encoderDrive(0.1, 18.6971, -18.6971);
+            encoderDrive(0.1, 11, -11);
             //move forward ~19"
-            encoderDrive(0.1, 19, 19);
+            encoderDrive(0.1, 24, 24);
         }
     }
 
