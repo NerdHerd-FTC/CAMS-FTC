@@ -33,10 +33,10 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 /**
- * Driver-Operator integrated control
+ * Teleop Final Control Scheme - Uses Triggers for Speed Mult
  */
-@TeleOp(name= "Integrated Control", group="Robot")
-public class IntegratedControlScheme extends LinearOpMode {
+@TeleOp(name= "Sumedh ONLY: Final Control Scheme", group="Robot")
+public class SumedhOnlyControlScheme extends LinearOpMode {
     /* Declare OpMode members. */
     public DcMotor  leftDrive   = null;
     public DcMotor  rightDrive  = null;
@@ -47,16 +47,20 @@ public class IntegratedControlScheme extends LinearOpMode {
     public Servo clawPalm = null;
     public Servo clawWrist = null;
 
+    private ElapsedTime runtime = new ElapsedTime();
+
     @Override
     public void runOpMode() {
         double left;
         double right;
         double drive;
         double turn;
-        double speedMult = 0.5;
+        double SPEED_MULT = 0.5;
+
         double ArmPower;
+        double fingerTarget = 0.7;
         double wristTarget = 0.3;
-        final double clawSpeed = 0.05; //strictly less than 1
+        final double CLAW_SPEED = 0.05; //strictly less than 1
 
         //Telemetry update variables:
         String speed = "Normal";
@@ -65,8 +69,10 @@ public class IntegratedControlScheme extends LinearOpMode {
         // Define and Initialize Motors and Servos
         leftDrive  = hardwareMap.get(DcMotor.class, "MotorA");
         rightDrive = hardwareMap.get(DcMotor.class, "MotorB");
+
         RVAMotor1  = hardwareMap.get(DcMotor.class, "MotorC");
         RVAMotor2 = hardwareMap.get(DcMotor.class, "MotorD");
+
         clawFinger = hardwareMap.get(Servo.class, "ServoFinger");
         clawPalm = hardwareMap.get(Servo.class, "ServoPalm");
         clawWrist = hardwareMap.get(Servo.class, "ServoWrist");
@@ -76,7 +82,6 @@ public class IntegratedControlScheme extends LinearOpMode {
         // Note: The settings here assume direct drive on left and right wheels.  Gear Reduction or 90 Deg drives may require direction flips
         leftDrive.setDirection(DcMotor.Direction.REVERSE);
         rightDrive.setDirection(DcMotor.Direction.FORWARD);
-
         RVAMotor1.setDirection(DcMotor.Direction.FORWARD);
         RVAMotor2.setDirection(DcMotor.Direction.REVERSE);
 
@@ -84,8 +89,10 @@ public class IntegratedControlScheme extends LinearOpMode {
         clawPalm.setPosition(0.2);
         clawWrist.setPosition(0.3);
 
+        runtime.reset();
+
         // Send telemetry message to signify robot waiting;
-        telemetry.addLine("Ready to start, good luck!");
+        telemetry.addData(">", "Robot Ready.  Press Play.");    //
         telemetry.update();
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
@@ -97,34 +104,15 @@ public class IntegratedControlScheme extends LinearOpMode {
             drive = -1 * gamepad1.left_stick_y;
             turn  =  gamepad1.right_stick_x;
 
-            //Wrist movement
-            double wrist = -1 * gamepad2.left_stick_y;
-            double palm = gamepad2.right_stick_x;
-
-            //Handle claw open and close
-            if (gamepad2.left_trigger >= 0.4){
-                clawFinger.setPosition(0); //close
-                fingerPos = "Closed";
-            }
-            else if (gamepad2.right_trigger >= 0.4){
-                clawFinger.setPosition(1); //open
-                fingerPos = "Open";
-            }
-
-            //Raise or lower claw
-            if (Math.abs(wrist) >= 0.2){
-                wristTarget += wrist * clawSpeed;
-            }
-            clawWrist.setPosition(wristTarget);
-
             //Handle speed multiplication
-            if (gamepad1.a) {
-                if (speedMult <= 0.25) {
-                    speedMult = 0.5;
+            if (gamepad1.a && runtime.seconds() >= 2) {
+                runtime.reset();
+                if (SPEED_MULT <= 0.25) {
+                    SPEED_MULT = 0.5;
                     speed = "Normal";
                 }
                 else {
-                    speedMult = 0.25;
+                    SPEED_MULT = 0.25;
                     speed = "Slow";
                 }
             }
@@ -154,18 +142,38 @@ public class IntegratedControlScheme extends LinearOpMode {
                 right = 1.0;
             }
             // Output the safe vales to the motor drives.
-            leftDrive.setPower(Math.pow(left, 3) * speedMult);
-            rightDrive.setPower(Math.pow(right, 3) * speedMult);
+            leftDrive.setPower(Math.pow(left, 3) * SPEED_MULT);
+            rightDrive.setPower(Math.pow(right, 3) * SPEED_MULT);
+
+            //HANDLE CLAW
+
+            //Handle claw open and close
+            if (gamepad1.right_bumper) {
+                clawFinger.setPosition(0); //close
+                fingerPos = "Closed";
+            }
+            else if (gamepad1.left_bumper){
+                clawFinger.setPosition(1); //open
+                fingerPos = "Open";
+            }
+
+            //Raise or lower claw
+            if (gamepad1.dpad_up){
+                wristTarget -= CLAW_SPEED;
+            }
+            else if (gamepad1.dpad_down){
+                wristTarget += CLAW_SPEED;
+            }
+            clawWrist.setPosition(wristTarget);
 
             // Send telemetry message to signify robot running;
             telemetry.addData("Speed: ", "String", speed);
             telemetry.addData("Stick X: ",  "%.2f", turn);
             telemetry.addData("Stick Y: ", "%.2f", (drive * -1));
-
-            telemetry.addData("Fingers: ", fingerPos);
-            telemetry.addData("Left stick: ",  "%.2f", wrist);
-            telemetry.addData("Right stick: ", "%.2f", palm);
+            telemetry.addData("Fingers are: ", fingerPos);
             telemetry.update();
+
+
             // Pace this loop so jaw action is reasonable speed.
             sleep(50);
         }
