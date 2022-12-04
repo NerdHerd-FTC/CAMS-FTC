@@ -30,6 +30,8 @@ public class FinishedTeleop extends LinearOpMode {
         double turn;
         double speedMult = 0.5;
         double ArmPower;
+        boolean buttonLock = false;
+
 
 
         //Telemetry Update Variables
@@ -55,6 +57,8 @@ public class FinishedTeleop extends LinearOpMode {
 
         RVAMotor1.setDirection(DcMotor.Direction.FORWARD);
         RVAMotor2.setDirection(DcMotor.Direction.REVERSE);
+        RVAMotor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        RVAMotor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         double fingerTargetPos = 0.7;
         double palmTargetPos = 0.2;
@@ -124,14 +128,12 @@ public class FinishedTeleop extends LinearOpMode {
             finger.setPosition(fingerTargetPos);
             palm.setPosition(palmTargetPos);
             wrist.setPosition(wristTargetPos);
-            telemetry.addData("fingerTargetPos", "%.2f", fingerTargetPos);
-            telemetry.addData("palmTargetPos", "%.2f", palmTargetPos);
-            telemetry.addData("wristTargetPos", "%.2f", wristTargetPos);
-            telemetry.update();
+            telemetry.addData("fingerTargetPos: ", "%.2f", fingerTargetPos);
+            telemetry.addData("palmTargetPos: ", "%.2f", palmTargetPos);
+            telemetry.addData("wristTargetPos: ", "%.2f", wristTargetPos);
 
 
-            //Handle speed multiplication
-            if (gamepad1.a) {
+            if((gamepad1.a)&&(!buttonLock)) {
                 if (speedMult <= 0.25) {
                     speedMult = 0.5;
                     speed = "Normal";
@@ -140,9 +142,14 @@ public class FinishedTeleop extends LinearOpMode {
                     speedMult = 0.25;
                     speed = "Slow";
                 }
+                buttonLock = true;
+            }
+            else {
+                buttonLock = false;
             }
 
-            //Handle speed multiplication
+
+            //Handle arm lowering/lifting
             if (gamepad1.left_trigger >= 0.4){
                 ArmPower = -0.4;
             }
@@ -152,8 +159,14 @@ public class FinishedTeleop extends LinearOpMode {
             else {
                 ArmPower = 0;
             }
+
             RVAMotor1.setPower(ArmPower);
             RVAMotor2.setPower(ArmPower);
+
+            telemetry.addData("Arm1 Power: ", "%.2f", RVAMotor1.getPower());
+            telemetry.addData("Arm2 Power: ", "%.2f", RVAMotor2.getPower());
+            telemetry.addData("Arm1 Position: ", "%.2f", RVAMotor1.getCurrentPosition());
+            telemetry.addData("Arm2 Position: ", "%.2f", RVAMotor2.getCurrentPosition());
 
             //Drive!
             // Combine drive and turn for blended motion.
@@ -174,10 +187,6 @@ public class FinishedTeleop extends LinearOpMode {
             telemetry.addData("Speed: ", "String", speed);
             telemetry.addData("Stick X: ",  "%.2f", turn);
             telemetry.addData("Stick Y: ", "%.2f", (drive * -1));
-
-            telemetry.addData("Fingers: ", fingerPos);
-            telemetry.addData("Left stick: ",  "%.2f", wrist);
-            telemetry.addData("Right stick: ", "%.2f", palm);
             telemetry.update();
             // Pace this loop so jaw action is reasonable speed.
             sleep(50);
