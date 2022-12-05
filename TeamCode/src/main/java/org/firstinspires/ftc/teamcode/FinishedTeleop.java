@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 /**
  * Driver-Operator integrated control
  */
-@TeleOp(name= "Integrated Control", group="Robot")
+@TeleOp(name= "Yee Yee Teleop", group="Robot")
 public class FinishedTeleop extends LinearOpMode {
     /* Declare OpMode members. */
     public DcMotor leftDrive   = null;
@@ -46,7 +46,7 @@ public class FinishedTeleop extends LinearOpMode {
         RVAMotor1  = hardwareMap.get(DcMotor.class, "MotorC");
         RVAMotor2 = hardwareMap.get(DcMotor.class, "MotorD");
         finger = hardwareMap.get(Servo.class, "ServoFinger");
-        palm = hardwareMap.get(Servo.class, "ServoPalm");
+        //palm = hardwareMap.get(Servo.class, "ServoPalm");
         wrist = hardwareMap.get(Servo.class, "ServoWrist");
 
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
@@ -79,18 +79,16 @@ public class FinishedTeleop extends LinearOpMode {
 
 
             // finger
-            if(gamepad2.left_stick_x > 0) {
-                fingerTargetPos += 0.05;
+            if((gamepad2.left_bumper))
+            {
+                if(gamepad2.right_bumper) {
+                    fingerTargetPos = 0;
+                }
             }
-            else if(gamepad2.left_stick_x < 0) {
-                fingerTargetPos -= 0.05;
-            }
-
-            if(fingerTargetPos >= 1.0) {
-                fingerTargetPos = 1.0;
-            }
-            else if(fingerTargetPos <= 0.0) {
-                fingerTargetPos = 0.0;
+            else if(gamepad2.right_bumper) {
+                if(!gamepad2.left_bumper) {
+                    fingerTargetPos = 1;
+                }
             }
 
             /* Not used at the moment
@@ -111,10 +109,10 @@ public class FinishedTeleop extends LinearOpMode {
             */
 
             // wrist
-            if(gamepad2.right_stick_y > 0) {
+            if(gamepad2.right_stick_y > 0.2) {
                 wristTargetPos += 0.05;
             }
-            else if(gamepad2.right_stick_y < 0) {
+            else if(gamepad2.right_stick_y < -0.2) {
                 wristTargetPos -= 0.05;
             }
 
@@ -126,38 +124,33 @@ public class FinishedTeleop extends LinearOpMode {
             }
 
             finger.setPosition(fingerTargetPos);
-            palm.setPosition(palmTargetPos);
+            //palm.setPosition(palmTargetPos);
             wrist.setPosition(wristTargetPos);
             telemetry.addData("fingerTargetPos: ", "%.2f", fingerTargetPos);
             telemetry.addData("palmTargetPos: ", "%.2f", palmTargetPos);
             telemetry.addData("wristTargetPos: ", "%.2f", wristTargetPos);
 
 
-            if((gamepad1.a)&&(!buttonLock)) {
+            if(gamepad1.a) {
                 if (speedMult <= 0.25) {
                     speedMult = 0.5;
                     speed = "Normal";
-                }
-                else {
+                } else {
                     speedMult = 0.25;
                     speed = "Slow";
                 }
-                buttonLock = true;
-            }
-            else {
-                buttonLock = false;
             }
 
 
             //Handle arm lowering/lifting
             if (gamepad1.left_trigger >= 0.4){
-                ArmPower = -0.4;
+                ArmPower = -0.2;
             }
             else if (gamepad1.right_trigger >= 0.4){
                 ArmPower = 0.4;
             }
             else {
-                ArmPower = 0;
+                ArmPower = 0.1;
             }
 
             RVAMotor1.setPower(ArmPower);
@@ -165,8 +158,8 @@ public class FinishedTeleop extends LinearOpMode {
 
             telemetry.addData("Arm1 Power: ", "%.2f", RVAMotor1.getPower());
             telemetry.addData("Arm2 Power: ", "%.2f", RVAMotor2.getPower());
-            telemetry.addData("Arm1 Position: ", "%.2f", RVAMotor1.getCurrentPosition());
-            telemetry.addData("Arm2 Position: ", "%.2f", RVAMotor2.getCurrentPosition());
+            telemetry.addData("Arm1 Position: ", "%d", RVAMotor1.getCurrentPosition());
+            telemetry.addData("Arm2 Position: ", "%d", RVAMotor2.getCurrentPosition());
 
             //Drive!
             // Combine drive and turn for blended motion.

@@ -29,9 +29,9 @@ public class ClawTestTeleop extends LinearOpMode {
     public void runOpMode() {
 
         // Define and Initialize Hardware
-        finger = hardwareMap.get(Servo.class, "finger");
-        palm = hardwareMap.get(Servo.class, "palm");
-        wrist = hardwareMap.get(Servo.class, "wrist");
+        finger = hardwareMap.get(Servo.class, "ServoFinger");
+        palm = hardwareMap.get(Servo.class, "ServoPalm");
+        wrist = hardwareMap.get(Servo.class, "ServoWrist");
 
         // Send telemetry message to signify robot waiting;
         telemetry.addData(">", "Robot Ready.  Press Play.");    //
@@ -48,11 +48,11 @@ public class ClawTestTeleop extends LinearOpMode {
         while (opModeIsActive()) {
 
             // finger
-            if(gamepad2.left_stick_x > 0) {
-                fingerTargetPos += 0.05;
+            if(gamepad2.left_bumper) {
+                fingerTargetPos = 0;
             }
-            else if(gamepad2.left_stick_x < 0) {
-                fingerTargetPos -= 0.05;
+            else if(gamepad2.right_bumper) {
+                fingerTargetPos = 1;
             }
 
             if(fingerTargetPos >= 1.0) {
@@ -62,6 +62,7 @@ public class ClawTestTeleop extends LinearOpMode {
                 fingerTargetPos = 0.0;
             }
 
+            /*
             // palm
             if(gamepad2.right_stick_x > 0) {
                 palmTargetPos += 0.05;
@@ -76,6 +77,8 @@ public class ClawTestTeleop extends LinearOpMode {
             else if(palmTargetPos <= 0.0) {
                 palmTargetPos = 0.0;
             }
+            */
+
 
             // wrist
             if(gamepad2.dpad_up) {
