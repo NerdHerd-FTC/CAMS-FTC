@@ -26,22 +26,27 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package org.firstinspires.ftc.teamcode;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
-/**
- * Teleop Final Control Scheme - Uses Triggers for Speed Mult
- */
-@TeleOp(name= "Sumedh: Final Control Scheme", group="Robot")
-@Disabled
-public class SumedhFinalControlScheme extends LinearOpMode {
+/**Developing lift and claw macros for easy, consistent scoring*/
+@TeleOp(name= "Macros", group="Robot")
+public class Macros extends LinearOpMode {
     /* Declare OpMode members. */
     public DcMotor  leftDrive   = null;
     public DcMotor  rightDrive  = null;
     public DcMotor  RVAMotor1   = null;
     public DcMotor  RVAMotor2  = null;
+
+    public Servo clawFinger = null;
+    public Servo clawPalm = null;
+    public Servo clawWrist = null;
+
+    private ElapsedTime runtime = new ElapsedTime();
+    private ElapsedTime runtimeb = new ElapsedTime();
 
     @Override
     public void runOpMode() {
@@ -49,17 +54,30 @@ public class SumedhFinalControlScheme extends LinearOpMode {
         double right;
         double drive;
         double turn;
-        double speedMult = 0.5;
+        double SPEED_MULT = 0.5;
+
         double ArmPower;
+        double fingerTarget = 0.7;
+        double wristTarget = 0.3;
+        final double CLAW_SPEED = 0.05; //strictly less than 1
+
+        boolean lifting = false;
+        double targetLiftLocation = 0;
 
         //Telemetry update variables:
         String speed = "Normal";
+        String fingerPos = "Closed";
 
         // Define and Initialize Motors and Servos
         leftDrive  = hardwareMap.get(DcMotor.class, "MotorA");
         rightDrive = hardwareMap.get(DcMotor.class, "MotorB");
+
         RVAMotor1  = hardwareMap.get(DcMotor.class, "MotorC");
         RVAMotor2 = hardwareMap.get(DcMotor.class, "MotorD");
+
+        clawFinger = hardwareMap.get(Servo.class, "ServoFinger");
+        clawPalm = hardwareMap.get(Servo.class, "ServoPalm");
+        clawWrist = hardwareMap.get(Servo.class, "ServoWrist");
 
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
@@ -68,6 +86,12 @@ public class SumedhFinalControlScheme extends LinearOpMode {
         rightDrive.setDirection(DcMotor.Direction.FORWARD);
         RVAMotor1.setDirection(DcMotor.Direction.FORWARD);
         RVAMotor2.setDirection(DcMotor.Direction.REVERSE);
+
+        clawFinger.setPosition(0.7);
+        clawPalm.setPosition(0.2);
+        clawWrist.setPosition(0.3);
+
+        runtime.reset();
 
         // Send telemetry message to signify robot waiting;
         telemetry.addData(">", "Robot Ready.  Press Play.");    //
@@ -83,23 +107,28 @@ public class SumedhFinalControlScheme extends LinearOpMode {
             turn  =  gamepad1.right_stick_x;
 
             //Handle speed multiplication
-            if (gamepad1.a) {
-                if (speedMult <= 0.25) {
-                    speedMult = 0.5;
+            if (gamepad1.a && runtime.seconds() >= 2) {
+                runtime.reset();
+                if (SPEED_MULT <= 0.25) {
+                    SPEED_MULT = 0.5;
                     speed = "Normal";
                 }
                 else {
-                    speedMult = 0.25;
+                    SPEED_MULT = 0.25;
                     speed = "Slow";
                 }
             }
 
+            if (gamepad1.b) {
+
+            }
+
             //Handle speed multiplication
             if (gamepad1.left_trigger >= 0.4){
-                ArmPower = -0.4;
+                ArmPower = -0.65;
             }
             else if (gamepad1.right_trigger >= 0.4){
-                ArmPower = 0.4;
+                ArmPower = 0.65;
             }
             else {
                 ArmPower = 0;
@@ -119,14 +148,38 @@ public class SumedhFinalControlScheme extends LinearOpMode {
                 right = 1.0;
             }
             // Output the safe vales to the motor drives.
-            leftDrive.setPower(Math.pow(left, 3) * speedMult);
-            rightDrive.setPower(Math.pow(right, 3) * speedMult);
+            leftDrive.setPower(Math.pow(left, 3) * SPEED_MULT);
+            rightDrive.setPower(Math.pow(right, 3) * SPEED_MULT);
+
+            //HANDLE CLAW
+
+            //Handle claw open and close
+            if (gamepad1.right_bumper) {
+                clawFinger.setPosition(0); //close
+                fingerPos = "Closed";
+            }
+            else if (gamepad1.left_bumper){
+                clawFinger.setPosition(1); //open
+                fingerPos = "Open";
+            }
+
+            //Raise or lower claw
+            if (gamepad1.dpad_up){
+                wristTarget -= CLAW_SPEED;
+            }
+            else if (gamepad1.dpad_down){
+                wristTarget += CLAW_SPEED;
+            }
+            clawWrist.setPosition(wristTarget);
 
             // Send telemetry message to signify robot running;
             telemetry.addData("Speed: ", "String", speed);
             telemetry.addData("Stick X: ",  "%.2f", turn);
             telemetry.addData("Stick Y: ", "%.2f", (drive * -1));
+            telemetry.addData("Fingers are: ", fingerPos);
             telemetry.update();
+
+
             // Pace this loop so jaw action is reasonable speed.
             sleep(50);
         }
