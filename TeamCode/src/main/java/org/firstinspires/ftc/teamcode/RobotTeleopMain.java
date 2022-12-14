@@ -181,6 +181,7 @@ public class RobotTeleopMain extends LinearOpMode {
             {
                 targetPositionLift = minLift;
             }
+
             MotorC.setTargetPosition(targetPositionLift);
             MotorD.setTargetPosition(-targetPositionLift);
 
@@ -189,6 +190,11 @@ public class RobotTeleopMain extends LinearOpMode {
 
             MotorC.setPower(0.9);
             MotorD.setPower(0.9);
+
+            if (!MotorC.isBusy() && !MotorD.isBusy()) {
+             MotorC.setPower(0);
+             MotorD.setPower(0);
+            }
 
 
 
