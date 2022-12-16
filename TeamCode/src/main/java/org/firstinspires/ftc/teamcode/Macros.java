@@ -46,19 +46,15 @@ public class Macros extends LinearOpMode {
     //public Servo clawFinger = null;
 
     private ElapsedTime speed_mult_runtime = new ElapsedTime();
-    private ElapsedTime ArmRuntime = new ElapsedTime();
 
     static final double     COUNTS_PER_MOTOR_REV    = 288 ;    //Core Hex Motor
     static final double     DRIVE_GEAR_REDUCTION    = 4.167;   //gear ratio of gears and sprockets (125t/15t * 20t/40t = 4.167)
-    static final double     FIRST_GEAR_DIAMETER_INCH     = 0.3543;    //diameter of starting, 15t gear (CHECK THIS NUMBER!!)
-    static final double     COUNTS_PER_INCH  = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) / (FIRST_GEAR_DIAMETER_INCH * Math.PI);
-    static final double     STARTING_INCHES = 16; //CHECK THIS NUMBER
+    static final double     FINAL_GEAR_DIAMETER_INCH     = 1.60;    //diameter of starting, 15t gear (CHECK THIS NUMBER!!)
+    static final double     COUNTS_PER_INCH  = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) / (FINAL_GEAR_DIAMETER_INCH * Math.PI); //ticks for motor to get one revolution at first gear * number of revolutions needed to have one revolution at output/output gear's circumference in inches (calculates number of ticks needed to get one inch of output)
+    static final double     STARTING_INCHES = 16; //CHECK THIS NUMBER - RVA elevated to height
 
     static final double     INCHES_TO_REACH = 33.5 - STARTING_INCHES; //goes to high junction - adjust this number for claw
     static final double     TICKS_TO_REACH = INCHES_TO_REACH * COUNTS_PER_INCH;
-
-    static final double     INCHES_AT_STOP = 0;
-    static final double     TICKS_AT_STOP = COUNTS_PER_INCH * 0;
 
     @Override
     public void runOpMode() {
@@ -137,11 +133,15 @@ public class Macros extends LinearOpMode {
                 }
             }
 
-            if (!RVAMotor1.isBusy() && !RVAMotor2.isBusy()) { //set power to zero when motors are off
+            //RVA Macro!
+
+            //set power to zero when motors are off
+            if (!RVAMotor1.isBusy() && !RVAMotor2.isBusy()) {
                 RVAMotor1.setPower(0);
                 RVAMotor2.setPower(0);
             }
 
+            //macro
             if (gamepad1.b) { //kill switch!
                 RVAMotor1.setPower(0);
                 RVAMotor2.setPower(0);
@@ -154,17 +154,15 @@ public class Macros extends LinearOpMode {
 
                 RVAMotor1.setPower(0.65);
                 RVAMotor2.setPower(0.65);
-                telemetry.addData("Going up: %7d", INCHES_TO_REACH);
             } else if (gamepad1.y) { //go down
-                RVAMotor1.setTargetPosition((int) TICKS_AT_STOP);
-                RVAMotor2.setTargetPosition((int) TICKS_AT_STOP);
+                RVAMotor1.setTargetPosition(0);
+                RVAMotor2.setTargetPosition(0);
 
                 RVAMotor1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 RVAMotor2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
                 RVAMotor1.setPower(0.65);
                 RVAMotor2.setPower(0.65);
-                telemetry.addData("Going down: %7d", INCHES_AT_STOP);
             }
 
             //Drive!
@@ -210,6 +208,8 @@ public class Macros extends LinearOpMode {
             //telemetry.addData("Fingers are: ", fingerPos);
             telemetry.addData("RVA Motor A Encoder: %7d", RVAMotor1.getCurrentPosition());
             telemetry.addData("RVA Motor B Encoder: %7d", RVAMotor2.getCurrentPosition());
+            telemetry.addData("\nRVA Motor A TARGET: %7d", RVAMotor1.getTargetPosition());
+            telemetry.addData("RVA Motor B TARGET: %7d", RVAMotor2.getTargetPosition());
             telemetry.update();
 
 
