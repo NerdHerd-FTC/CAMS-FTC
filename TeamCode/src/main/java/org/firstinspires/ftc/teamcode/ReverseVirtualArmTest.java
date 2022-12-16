@@ -39,6 +39,11 @@ public class ReverseVirtualArmTest extends LinearOpMode {
     public DcMotor  RVAMotor1   = null;
     public DcMotor  RVAMotor2  = null;
 
+    static final double     COUNTS_PER_MOTOR_REV    = 288 ;    //Core Hex Motor
+    static final double     DRIVE_GEAR_REDUCTION    = 4.167;   //gear ratio of gears and sprockets (125t/15t * 20t/40t = 4.167)
+    static final double     FIRST_GEAR_DIAMETER_INCH     = 0.3543;    //diameter of starting, 15t gear (CHECK THIS NUMBER!!)
+    static final double     COUNTS_PER_INCH  = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) / (FIRST_GEAR_DIAMETER_INCH * Math.PI);
+
     @Override
     public void runOpMode() {
         double ArmPower = 0;
@@ -51,6 +56,15 @@ public class ReverseVirtualArmTest extends LinearOpMode {
         RVAMotor1.setDirection(DcMotor.Direction.FORWARD);
         RVAMotor2.setDirection(DcMotor.Direction.REVERSE);
 
+        RVAMotor1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        RVAMotor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        RVAMotor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        RVAMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        RVAMotor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        RVAMotor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
         // Send telemetry message to signify robot waiting;
         telemetry.addData(">", "Robot Ready.  Press Play.");    //
         telemetry.update();
@@ -59,10 +73,10 @@ public class ReverseVirtualArmTest extends LinearOpMode {
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
             if (gamepad1.left_trigger >= 0.4){
-                ArmPower = -0.4;
+                ArmPower = -0.65;
             }
             else if (gamepad1.right_trigger >= 0.4){
-                ArmPower = 0.4;
+                ArmPower = 0.65;
             }
             else {
                 ArmPower = 0;
@@ -71,6 +85,10 @@ public class ReverseVirtualArmTest extends LinearOpMode {
             RVAMotor2.setPower(ArmPower);
 
             telemetry.addData("Power: ", "%.2f", ArmPower);
+            telemetry.addData("RVA Motor A Encoder: %7d", RVAMotor1.getCurrentPosition());
+            telemetry.addData("RVA Motor B Encoder: %7d", RVAMotor2.getCurrentPosition());
+            telemetry.addData("Distance Traveled (inch) A: %7d", RVAMotor1.getCurrentPosition()/(int)COUNTS_PER_INCH);
+            telemetry.addData("Distance Traveled (inch) B: %7d", RVAMotor2.getCurrentPosition()/(int)COUNTS_PER_INCH);
             telemetry.update();
             // Pace this loop so jaw action is reasonable speed.
             sleep(50);

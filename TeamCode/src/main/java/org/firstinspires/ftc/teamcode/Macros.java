@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package org.firstinspires.ftc.teamcode;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -34,6 +35,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 /**Developing lift and claw macros for easy, consistent scoring*/
 @TeleOp(name= "Macros", group="Robot")
+@Disabled
 public class Macros extends LinearOpMode {
     /* Declare OpMode members. */
     public DcMotor  leftDrive   = null;
@@ -41,12 +43,22 @@ public class Macros extends LinearOpMode {
     public DcMotor  RVAMotor1   = null;
     public DcMotor  RVAMotor2  = null;
 
-    public Servo clawFinger = null;
-    public Servo clawPalm = null;
-    public Servo clawWrist = null;
+    //public Servo clawFinger = null;
 
-    private ElapsedTime runtime = new ElapsedTime();
-    private ElapsedTime runtimeb = new ElapsedTime();
+    private ElapsedTime speed_mult_runtime = new ElapsedTime();
+    private ElapsedTime ArmRuntime = new ElapsedTime();
+
+    static final double     COUNTS_PER_MOTOR_REV    = 288 ;    //Core Hex Motor
+    static final double     DRIVE_GEAR_REDUCTION    = 4.167;   //gear ratio of gears and sprockets (125t/15t * 20t/40t = 4.167)
+    static final double     FIRST_GEAR_DIAMETER_INCH     = 0.3543;    //diameter of starting, 15t gear (CHECK THIS NUMBER!!)
+    static final double     COUNTS_PER_INCH  = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) / (FIRST_GEAR_DIAMETER_INCH * Math.PI);
+    static final double     STARTING_INCHES = 16; //CHECK THIS NUMBER
+
+    static final double     INCHES_TO_REACH = 33.5 - STARTING_INCHES; //goes to high junction - adjust this number for claw
+    static final double     TICKS_TO_REACH = INCHES_TO_REACH * COUNTS_PER_INCH;
+
+    static final double     INCHES_AT_STOP = 0;
+    static final double     TICKS_AT_STOP = COUNTS_PER_INCH * 0;
 
     @Override
     public void runOpMode() {
@@ -62,6 +74,7 @@ public class Macros extends LinearOpMode {
         final double CLAW_SPEED = 0.05; //strictly less than 1
 
         boolean lifting = false;
+        boolean dropping = false;
         double targetLiftLocation = 0;
 
         //Telemetry update variables:
@@ -75,9 +88,7 @@ public class Macros extends LinearOpMode {
         RVAMotor1  = hardwareMap.get(DcMotor.class, "MotorC");
         RVAMotor2 = hardwareMap.get(DcMotor.class, "MotorD");
 
-        clawFinger = hardwareMap.get(Servo.class, "ServoFinger");
-        clawPalm = hardwareMap.get(Servo.class, "ServoPalm");
-        clawWrist = hardwareMap.get(Servo.class, "ServoWrist");
+        //clawFinger = hardwareMap.get(Servo.class, "ServoFinger");
 
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
@@ -87,11 +98,18 @@ public class Macros extends LinearOpMode {
         RVAMotor1.setDirection(DcMotor.Direction.FORWARD);
         RVAMotor2.setDirection(DcMotor.Direction.REVERSE);
 
-        clawFinger.setPosition(0.7);
-        clawPalm.setPosition(0.2);
-        clawWrist.setPosition(0.3);
+        RVAMotor1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        RVAMotor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-        runtime.reset();
+        RVAMotor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        RVAMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        RVAMotor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        RVAMotor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        //clawFinger.setPosition(0.7);
+
+        speed_mult_runtime.reset();
 
         // Send telemetry message to signify robot waiting;
         telemetry.addData(">", "Robot Ready.  Press Play.");    //
@@ -107,8 +125,8 @@ public class Macros extends LinearOpMode {
             turn  =  gamepad1.right_stick_x;
 
             //Handle speed multiplication
-            if (gamepad1.a && runtime.seconds() >= 2) {
-                runtime.reset();
+            if (gamepad1.a && speed_mult_runtime.seconds() >= 2) {
+                speed_mult_runtime.reset();
                 if (SPEED_MULT <= 0.25) {
                     SPEED_MULT = 0.5;
                     speed = "Normal";
@@ -119,22 +137,35 @@ public class Macros extends LinearOpMode {
                 }
             }
 
-            if (gamepad1.b) {
-
+            if (!RVAMotor1.isBusy() && !RVAMotor2.isBusy()) { //set power to zero when motors are off
+                RVAMotor1.setPower(0);
+                RVAMotor2.setPower(0);
             }
 
-            //Handle speed multiplication
-            if (gamepad1.left_trigger >= 0.4){
-                ArmPower = -0.65;
+            if (gamepad1.b) { //kill switch!
+                RVAMotor1.setPower(0);
+                RVAMotor2.setPower(0);
+            } else if (gamepad1.a) { //go up
+                RVAMotor1.setTargetPosition((int) TICKS_TO_REACH);
+                RVAMotor2.setTargetPosition((int) TICKS_TO_REACH);
+
+                RVAMotor1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                RVAMotor2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+                RVAMotor1.setPower(0.65);
+                RVAMotor2.setPower(0.65);
+                telemetry.addData("Going up: %7d", INCHES_TO_REACH);
+            } else if (gamepad1.y) { //go down
+                RVAMotor1.setTargetPosition((int) TICKS_AT_STOP);
+                RVAMotor2.setTargetPosition((int) TICKS_AT_STOP);
+
+                RVAMotor1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                RVAMotor2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+                RVAMotor1.setPower(0.65);
+                RVAMotor2.setPower(0.65);
+                telemetry.addData("Going down: %7d", INCHES_AT_STOP);
             }
-            else if (gamepad1.right_trigger >= 0.4){
-                ArmPower = 0.65;
-            }
-            else {
-                ArmPower = 0;
-            }
-            RVAMotor1.setPower(ArmPower);
-            RVAMotor2.setPower(ArmPower);
 
             //Drive!
             // Combine drive and turn for blended motion.
@@ -154,29 +185,31 @@ public class Macros extends LinearOpMode {
             //HANDLE CLAW
 
             //Handle claw open and close
-            if (gamepad1.right_bumper) {
-                clawFinger.setPosition(0); //close
-                fingerPos = "Closed";
-            }
-            else if (gamepad1.left_bumper){
-                clawFinger.setPosition(1); //open
-                fingerPos = "Open";
-            }
+            //if (gamepad1.right_bumper) {
+                //clawFinger.setPosition(0); //close
+                //fingerPos = "Closed";
+            //}
+            //else if (gamepad1.left_bumper){
+                //clawFinger.setPosition(1); //open
+                //fingerPos = "Open";
+            //}
 
             //Raise or lower claw
-            if (gamepad1.dpad_up){
-                wristTarget -= CLAW_SPEED;
-            }
-            else if (gamepad1.dpad_down){
-                wristTarget += CLAW_SPEED;
-            }
-            clawWrist.setPosition(wristTarget);
+            //if (gamepad1.dpad_up){
+                //wristTarget -= CLAW_SPEED;
+            //}
+            //else if (gamepad1.dpad_down){
+                //wristTarget += CLAW_SPEED;
+            //}
+            //clawWrist.setPosition(wristTarget);
 
             // Send telemetry message to signify robot running;
             telemetry.addData("Speed: ", "String", speed);
             telemetry.addData("Stick X: ",  "%.2f", turn);
             telemetry.addData("Stick Y: ", "%.2f", (drive * -1));
-            telemetry.addData("Fingers are: ", fingerPos);
+            //telemetry.addData("Fingers are: ", fingerPos);
+            telemetry.addData("RVA Motor A Encoder: %7d", RVAMotor1.getCurrentPosition());
+            telemetry.addData("RVA Motor B Encoder: %7d", RVAMotor2.getCurrentPosition());
             telemetry.update();
 
 
