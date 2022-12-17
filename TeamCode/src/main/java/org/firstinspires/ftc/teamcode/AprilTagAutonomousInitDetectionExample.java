@@ -185,6 +185,7 @@ public class AprilTagAutonomousInitDetectionExample extends LinearOpMode {
                 telemetry.update();
             }
 
+            //back 1.5 seconds
             runtime.reset();
             while (opModeIsActive() && (runtime.seconds() < 1.5)) {
                 MotorA.setPower(-FORWARD_SPEED);
@@ -233,7 +234,7 @@ public class AprilTagAutonomousInitDetectionExample extends LinearOpMode {
                 telemetry.addData("Path", "Leg 1: %4.1f S Elapsed", runtime.seconds());
                 telemetry.update();
             }
-            //Turn Left 1.3 Seconds
+            //Turn Left 1.5 Seconds
             runtime.reset();
             while (opModeIsActive() && (runtime.seconds() < 1.5)) {
                 MotorA.setPower(TURN_SPEED);
