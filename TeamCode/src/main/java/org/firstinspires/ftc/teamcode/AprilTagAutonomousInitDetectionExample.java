@@ -186,7 +186,7 @@ public class AprilTagAutonomousInitDetectionExample extends LinearOpMode {
             }
 
             runtime.reset();
-            while (opModeIsActive() && (runtime.seconds() < 1.2)) {
+            while (opModeIsActive() && (runtime.seconds() < 1.5)) {
                 MotorA.setPower(-FORWARD_SPEED);
                 MotorB.setPower(-FORWARD_SPEED);
                 telemetry.addData("Path", "Leg 1: %4.1f S Elapsed", runtime.seconds());
@@ -194,7 +194,7 @@ public class AprilTagAutonomousInitDetectionExample extends LinearOpMode {
             }
             //Turn Left 1.3 Seconds
             runtime.reset();
-            while (opModeIsActive() && (runtime.seconds() < 2.0)) {
+            while (opModeIsActive() && (runtime.seconds() < 1.6)) {
                 MotorA.setPower(-TURN_SPEED);
                 MotorB.setPower(TURN_SPEED);
                 telemetry.addData("Path", "Leg 2: %4.1f S Elapsed", runtime.seconds());
@@ -202,7 +202,7 @@ public class AprilTagAutonomousInitDetectionExample extends LinearOpMode {
             }
             //Go Forward 1.0 Seconds
             runtime.reset();
-            while (opModeIsActive() && (runtime.seconds() < 2.5)) {
+            while (opModeIsActive() && (runtime.seconds() < 2.0)) {
                 MotorA.setPower(FORWARD_SPEED);
                 MotorB.setPower(FORWARD_SPEED);
                 telemetry.addData("Path", "Leg 1: %4.1f S Elapsed", runtime.seconds());
@@ -243,7 +243,7 @@ public class AprilTagAutonomousInitDetectionExample extends LinearOpMode {
             }
             //Go Forward 1.0 Seconds
             runtime.reset();
-            while (opModeIsActive() && (runtime.seconds() < 2.5)) {
+            while (opModeIsActive() && (runtime.seconds() < 2.0)) {
                 MotorB.setPower(FORWARD_SPEED);
                 MotorA.setPower(FORWARD_SPEED);
                 telemetry.addData("Path", "Leg 1: %4.1f S Elapsed", runtime.seconds());

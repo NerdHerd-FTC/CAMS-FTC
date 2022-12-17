@@ -47,26 +47,13 @@ import com.qualcomm.robotcore.hardware.Servo;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@TeleOp(name="Robot: Teleop Main", group="Robot")
+@TeleOp(name="Lift Control", group="Robot")
 //@Disabled
-public class RobotTeleopMain extends LinearOpMode {
+public class FreeLift extends LinearOpMode {
 
     /* Declare OpMode members. */
-    public DcMotor  MotorA   = null;
-    public DcMotor  MotorB  = null;
     public DcMotor MotorC = null;
-    //public DcMotor MotorD = null;
-    public Servo Servo1 = null;
 
-
-
-
-    //public static final double MID_SERVO   =  0.6 ;
-    //public static final double CLAW_SPEED  = 1.0 ;
-    //public static final double ELEVATOR_UP_FAST  = 1 ;
-    //public static final double ELEVATOR_DOWN_FAST  = -1 ;
-    //public static final double CRANE_UP  = 0.75 ;
-    //public static final double CRANE_DOWN  = -0.75 ;
 
     @Override
     public void runOpMode() {
@@ -74,46 +61,22 @@ public class RobotTeleopMain extends LinearOpMode {
         double right;
         double max;
 
-        int minLift = 0;
-        int maxLift = 1400;
+        int minLift = -1300;
+        int maxLift = 1300;
 
 
         // Define and Initialize Motors
 
-
-        MotorA  = hardwareMap.get(DcMotor.class, "MotorA");
-        MotorB = hardwareMap.get(DcMotor.class, "MotorB");
         MotorC  = hardwareMap.get(DcMotor.class, "MotorC");
-        //MotorD  = hardwareMap.get(DcMotor.class, "MotorD");
-        Servo1 = hardwareMap.get(Servo.class, "Servo1");
 
-        MotorA.setDirection(DcMotor.Direction.REVERSE);
-        MotorB.setDirection(DcMotor.Direction.FORWARD);
         MotorC.setDirection(DcMotor.Direction.REVERSE);
-        //MotorD.setDirection(DcMotor.Direction.REVERSE);
-
 
         MotorC.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         MotorC.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         MotorC.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-
-        //MotorD.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        //MotorD.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        //MotorD.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        MotorA.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        MotorB.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        MotorA.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        MotorB.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-
         int targetPositionLift = 0;
 
-
-
-        //targetPositionLift = MotorC.getCurrentPosition();
 
         // Send telemetry message to signify robot waiting;
         telemetry.addData(">", "Robot Ready.  Press Play.");    //
@@ -125,45 +88,6 @@ public class RobotTeleopMain extends LinearOpMode {
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
 
-            // Robot Drive Base Speed
-            left = gamepad1.left_stick_y/2;
-            right = gamepad1.right_stick_y/2;
-
-            max = Math.abs(left);
-            if (max > 1.0)
-            {
-                left /= max;
-            }
-
-            max = Math.abs(right);
-            if (max > 1.0)
-            {
-                right /= max;
-            }
-
-
-            MotorA.setPower(left);
-            MotorB.setPower(right);
-/*
-
-            // Robot Claw Open/Close
-            if (gamepad1.right_bumper)
-                clawOffset += CLAW_SPEED;
-            else if (gamepad1.left_bumper)
-                clawOffset -= CLAW_SPEED;
-            clawOffset = Range.clip(clawOffset, 0.95, 0.6);
-            Servo1.setPosition(clawOffset);
-  */
-            if (gamepad1.a) {
-                Servo1.setPosition(0.55);  //decrease to open more
-            }
-            if (gamepad1.b) {
-                Servo1.setPosition(0.35);  //increase to close more
-            }
-            //if(gamepad1.left_bumper && gamepad1.right_bumper) {
-              //  Servo1.setPosition(0.55);
-
-            //}
 
             // Robot Lift Speed
             if ((gamepad1.left_bumper)&&(MotorC.getCurrentPosition() > minLift)) {   //down
@@ -202,24 +126,13 @@ public class RobotTeleopMain extends LinearOpMode {
 
 
 
-
-
-
-
             // Send telemetry message to signify robot running;
-            telemetry.addData("left: ",  "%.2f", left);
-            telemetry.addData("right: ",  "%.2f", right);
             telemetry.addData("claw offset: ",  "Offset = %.2f");
-            //telemetry.addData("left",  "%.2f", elevatorPower);
-            //telemetry.addData("crane: ",  "%.2f", cranePower);
 
             telemetry.addData("lift max: ",  "%d", maxLift);
             telemetry.addData("lift min: ",  "%d", minLift);
             telemetry.addData("lift Target Position: ",  "%d", targetPositionLift);
-            telemetry.addData("A Encoder", "%d", MotorA.getCurrentPosition());
-            telemetry.addData("B Encoder", "%d", MotorB.getCurrentPosition());
             telemetry.addData("lift Current Position: ",  "%d", MotorC.getCurrentPosition());
-            //telemetry.addData("Lift Current Position: ",  "%d", MotorD.getCurrentPosition());
 
             telemetry.update();
 
