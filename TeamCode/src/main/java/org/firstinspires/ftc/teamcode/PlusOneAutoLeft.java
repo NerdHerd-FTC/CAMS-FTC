@@ -21,6 +21,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -35,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Locale;
 
 @Autonomous(name="LEFT Plus One", group="Robot")
+@Disabled
 public class PlusOneAutoLeft extends LinearOpMode
 {
     public DcMotor leftDrive = null;

@@ -29,6 +29,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
 
 /**
 Reverse Virtual Arm test
@@ -38,6 +39,7 @@ public class ReverseVirtualArmTest extends LinearOpMode {
     /* Declare OpMode members. */
     public DcMotor  RVAMotor1   = null;
     public DcMotor  RVAMotor2  = null;
+    //public Servo clawFinger = null;
 
     static final double     COUNTS_PER_MOTOR_REV    = 288 ;    //Core Hex Motor
     static final double     DRIVE_GEAR_REDUCTION    = 4.167;   //gear ratio of gears and sprockets (125t/15t * 20t/40t = 4.167)
@@ -47,10 +49,12 @@ public class ReverseVirtualArmTest extends LinearOpMode {
     @Override
     public void runOpMode() {
         double ArmPower = 0;
+        String fingerPos = "Closed";
 
         // Define and Initialize Motors and Servos
         RVAMotor1  = hardwareMap.get(DcMotor.class, "MotorC");
         RVAMotor2 = hardwareMap.get(DcMotor.class, "MotorD");
+        //clawFinger = hardwareMap.get(Servo.class, "ServoFinger");
 
         //core hex motors are facing opposite each other and will rotate in opposite directions
         RVAMotor1.setDirection(DcMotor.Direction.FORWARD);
@@ -70,6 +74,8 @@ public class ReverseVirtualArmTest extends LinearOpMode {
         telemetry.update();
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
+
+        //clawFinger.setPosition(0);
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
             if (gamepad1.left_trigger >= 0.4){
@@ -84,11 +90,22 @@ public class ReverseVirtualArmTest extends LinearOpMode {
             RVAMotor1.setPower(ArmPower);
             RVAMotor2.setPower(ArmPower);
 
+            //Handle claw open and close
+            //if (gamepad2.left_trigger >= 0.4){
+            //    clawFinger.setPosition(0); //close
+            //    fingerPos = "Closed";
+            //}
+            //else if (gamepad2.right_trigger >= 0.4){
+            //    clawFinger.setPosition(0.5); //open
+             //   fingerPos = "Open";
+            //}
+
             telemetry.addData("Power: ", "%.2f", ArmPower);
             telemetry.addData("RVA Motor A Encoder: %7d", RVAMotor1.getCurrentPosition());
             telemetry.addData("RVA Motor B Encoder: %7d", RVAMotor2.getCurrentPosition());
             telemetry.addData("Distance Traveled (inch) A: %7d", RVAMotor1.getCurrentPosition()/(int)COUNTS_PER_INCH);
             telemetry.addData("Distance Traveled (inch) B: %7d", RVAMotor2.getCurrentPosition()/(int)COUNTS_PER_INCH);
+            telemetry.addData("Claw Finger: ", fingerPos);
             telemetry.update();
             // Pace this loop so jaw action is reasonable speed.
             sleep(50);

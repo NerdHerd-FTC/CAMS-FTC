@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package org.firstinspires.ftc.teamcode.Archive;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -35,6 +36,7 @@ import com.qualcomm.robotcore.hardware.Servo;
  * Teleop Final Control Scheme - Uses Triggers for Speed Mult
  */
 @TeleOp(name= "Final Control Scheme", group="Robot")
+@Disabled
 public class FinalControlScheme extends LinearOpMode {
     /* Declare OpMode members. */
     public DcMotor  leftDrive   = null;

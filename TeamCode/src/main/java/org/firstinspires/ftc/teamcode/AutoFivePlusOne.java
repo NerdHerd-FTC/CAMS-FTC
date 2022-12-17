@@ -36,9 +36,9 @@ import org.openftc.easyopencv.OpenCvCameraRotation;
 import java.util.ArrayList;
 import java.util.Locale;
 
-@Autonomous(name="Auto Score A2", group="Robot")
+@Autonomous(name="RIGHT Auto Five Plus One", group="Robot")
 @Disabled
-public class AutoScoreA2 extends LinearOpMode
+public class AutoFivePlusOne extends LinearOpMode
 {
     public DcMotor leftDrive = null;
     public DcMotor rightDrive = null;
