@@ -75,7 +75,7 @@ public class RobotTeleopMain extends LinearOpMode {
         double max;
 
         int minLift = 0;
-        int maxLift = 1400;
+        int maxLift = 1360;
 
 
         // Define and Initialize Motors
