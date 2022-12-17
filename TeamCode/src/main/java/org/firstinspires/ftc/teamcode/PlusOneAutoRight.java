@@ -216,14 +216,18 @@ public class PlusOneAutoRight extends LinearOpMode
 
         //go to location
         if(tagOfInterest == null || tagOfInterest.id == LEFT){
-            encoderDrive(0.5, -6.5, 6.5, 2); //turn 45 degrees to the left (90 deg total)
+            encoderDrive(0.5, -6.5, 6.5, 1); //turn 45 degrees to the left (90 deg total)
             encoderDrive(0.5, 20, 20, 0); //move forward to get to loc
             encoderDrive(0.5, -11, 11, 0); //turn 90 to be straight
-
+            encoderDrive(0.5, 12, 12, 0);
         }else if(tagOfInterest.id == MIDDLE){
-            encoderDrive(0.5, 34, 34, 0);
+            encoderDrive(0.5, 6.5, -6.5, 1); //return to straight orientation
+            encoderDrive(0.5, -10, -10, 0); //return to straight orientation
         }else{
-            encoderDrive(0.5, 22, 22, 0);
+            encoderDrive(0.5, 16.5, -16.5, 1); //turn 45 degrees to the right (90 deg total)
+            encoderDrive(0.5, 20, 20, 0); //move forward to get to loc
+            encoderDrive(0.5, 11, -11, 0); //turn 90 right to be straight
+            encoderDrive(0.5, 12, 12, 0);
         }
     }
 
