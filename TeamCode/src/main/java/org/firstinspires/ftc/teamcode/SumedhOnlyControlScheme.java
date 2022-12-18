@@ -42,10 +42,7 @@ public class SumedhOnlyControlScheme extends LinearOpMode {
     public DcMotor  rightDrive  = null;
     public DcMotor  RVAMotor1   = null;
     public DcMotor  RVAMotor2  = null;
-
     public Servo clawFinger = null;
-    public Servo clawPalm = null;
-    public Servo clawWrist = null;
 
     private ElapsedTime runtime = new ElapsedTime();
 
@@ -74,8 +71,6 @@ public class SumedhOnlyControlScheme extends LinearOpMode {
         RVAMotor2 = hardwareMap.get(DcMotor.class, "MotorD");
 
         clawFinger = hardwareMap.get(Servo.class, "ServoFinger");
-        clawPalm = hardwareMap.get(Servo.class, "ServoPalm");
-        clawWrist = hardwareMap.get(Servo.class, "ServoWrist");
 
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
@@ -85,9 +80,16 @@ public class SumedhOnlyControlScheme extends LinearOpMode {
         RVAMotor1.setDirection(DcMotor.Direction.FORWARD);
         RVAMotor2.setDirection(DcMotor.Direction.REVERSE);
 
-        clawFinger.setPosition(0.7);
-        clawPalm.setPosition(0.2);
-        clawWrist.setPosition(0.3);
+        RVAMotor1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        RVAMotor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        RVAMotor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        RVAMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        RVAMotor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        RVAMotor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        clawFinger.setPosition(0);
 
         runtime.reset();
 
@@ -117,7 +119,6 @@ public class SumedhOnlyControlScheme extends LinearOpMode {
                 }
             }
 
-            //Handle speed multiplication
             if (gamepad1.left_trigger >= 0.4){
                 ArmPower = -0.65;
             }
@@ -129,6 +130,16 @@ public class SumedhOnlyControlScheme extends LinearOpMode {
             }
             RVAMotor1.setPower(ArmPower);
             RVAMotor2.setPower(ArmPower);
+
+            //Handle claw open and close
+            if (gamepad1.left_bumper){
+                clawFinger.setPosition(0); //close
+                fingerPos = "Closed";
+            }
+            else if (gamepad1.right_bumper){
+                clawFinger.setPosition(0.5); //open
+                fingerPos = "Open";
+            }
 
             //Drive!
             // Combine drive and turn for blended motion.
@@ -145,32 +156,15 @@ public class SumedhOnlyControlScheme extends LinearOpMode {
             leftDrive.setPower(Math.pow(left, 3) * SPEED_MULT);
             rightDrive.setPower(Math.pow(right, 3) * SPEED_MULT);
 
-            //HANDLE CLAW
-
-            //Handle claw open and close
-            if (gamepad1.right_bumper) {
-                clawFinger.setPosition(0); //close
-                fingerPos = "Closed";
-            }
-            else if (gamepad1.left_bumper){
-                clawFinger.setPosition(1); //open
-                fingerPos = "Open";
-            }
-
-            //Raise or lower claw
-            if (gamepad1.dpad_up){
-                wristTarget -= CLAW_SPEED;
-            }
-            else if (gamepad1.dpad_down){
-                wristTarget += CLAW_SPEED;
-            }
-            clawWrist.setPosition(wristTarget);
-
             // Send telemetry message to signify robot running;
             telemetry.addData("Speed: ", "String", speed);
             telemetry.addData("Stick X: ",  "%.2f", turn);
             telemetry.addData("Stick Y: ", "%.2f", (drive * -1));
             telemetry.addData("Fingers are: ", fingerPos);
+            telemetry.addData("Power: ", "%.2f", ArmPower);
+            telemetry.addData("RVA Motor A Encoder: %7d", RVAMotor1.getCurrentPosition());
+            telemetry.addData("RVA Motor B Encoder: %7d", RVAMotor2.getCurrentPosition());
+            telemetry.addData("Claw Finger: ", fingerPos);
             telemetry.update();
 
 

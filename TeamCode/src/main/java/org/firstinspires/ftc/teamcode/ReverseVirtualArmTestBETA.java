@@ -26,35 +26,50 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package org.firstinspires.ftc.teamcode;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.Servo;
 
 /**
 Reverse Virtual Arm test
  */
-@TeleOp(name= "RVA Test", group="Robot")
-public class ReverseVirtualArmTest extends LinearOpMode {
+@TeleOp(name= "RVA Test BETA", group="Robot")
+public class ReverseVirtualArmTestBETA extends LinearOpMode {
     /* Declare OpMode members. */
     public DcMotor  RVAMotor1   = null;
     public DcMotor  RVAMotor2  = null;
-    public Servo clawFinger = null;
+    //public Servo clawFinger = null;
 
     static final double     COUNTS_PER_MOTOR_REV    = 288 ;    //Core Hex Motor
     static final double     DRIVE_GEAR_REDUCTION    = 4.167;   //gear ratio of gears and sprockets (125t/15t * 20t/40t = 4.167)
     static final double     FIRST_GEAR_DIAMETER_INCH     = 0.3543;    //diameter of starting, 15t gear (CHECK THIS NUMBER!!)
     static final double     COUNTS_PER_INCH  = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) / (FIRST_GEAR_DIAMETER_INCH * Math.PI);
 
+    static final int        TICKS_FULLY_LIFTED = 375;
+    static final int        DELTA_T = 25;
+    static final double     LIMITER = 0.05;
+
+
     @Override
     public void runOpMode() {
         double ArmPower = 0;
+        int targTicks = 0;
+        int error = 0;
         String fingerPos = "Closed";
+
+        //Gain variables
+        final double K_P = 7.5;
+        final double K_D = 3;
+        final double F = 0.1;
+        final double SLANT_GAIN = 0.01;
+
+        final double D_Denominator = K_D / DELTA_T;
 
         // Define and Initialize Motors and Servos
         RVAMotor1  = hardwareMap.get(DcMotor.class, "MotorC");
         RVAMotor2 = hardwareMap.get(DcMotor.class, "MotorD");
-        clawFinger = hardwareMap.get(Servo.class, "ServoFinger");
+        //clawFinger = hardwareMap.get(Servo.class, "ServoFinger");
 
         //core hex motors are facing opposite each other and will rotate in opposite directions
         RVAMotor1.setDirection(DcMotor.Direction.FORWARD);
@@ -75,30 +90,44 @@ public class ReverseVirtualArmTest extends LinearOpMode {
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
 
-        clawFinger.setPosition(0);
+        //clawFinger.setPosition(0);
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
             if (gamepad1.left_trigger >= 0.4){
-                ArmPower = -0.65;
+                targTicks = TICKS_FULLY_LIFTED;
             }
             else if (gamepad1.right_trigger >= 0.4){
-                ArmPower = 0.65;
+                targTicks = 0;
             }
-            else {
-                ArmPower = 0;
+
+            //PDF
+            int prevError = error;
+            error = targTicks - RVAMotor1.getCurrentPosition();
+            //P
+            final double P = error * K_P;
+            //D
+            final double D = (prevError - error) * D_Denominator;
+            ArmPower = (P + D) * LIMITER;
+            //F
+            if (error > 0) {
+                ArmPower += F;
             }
-            RVAMotor1.setPower(ArmPower);
-            RVAMotor2.setPower(ArmPower);
+
+            //Adjust so the RVA doesn't slant
+            double slantAdjust = SLANT_GAIN * ArmPower * (RVAMotor1.getCurrentPosition() - RVAMotor2.getCurrentPosition());
+
+            RVAMotor1.setPower(ArmPower - slantAdjust);
+            RVAMotor2.setPower(ArmPower + slantAdjust);
 
             //Handle claw open and close
-            if (gamepad1.left_bumper){
-                clawFinger.setPosition(0); //close
-                fingerPos = "Closed";
-            }
-            else if (gamepad1.right_bumper){
-                clawFinger.setPosition(0.5); //open
-                fingerPos = "Open";
-            }
+            //if (gamepad2.left_trigger >= 0.4){
+            //    clawFinger.setPosition(0); //close
+            //    fingerPos = "Closed";
+            //}
+            //else if (gamepad2.right_trigger >= 0.4){
+            //    clawFinger.setPosition(0.5); //open
+             //   fingerPos = "Open";
+            //}
 
             telemetry.addData("Power: ", "%.2f", ArmPower);
             telemetry.addData("RVA Motor A Encoder: %7d", RVAMotor1.getCurrentPosition());
@@ -108,7 +137,7 @@ public class ReverseVirtualArmTest extends LinearOpMode {
             telemetry.addData("Claw Finger: ", fingerPos);
             telemetry.update();
             // Pace this loop so jaw action is reasonable speed.
-            sleep(50);
+            sleep(DELTA_T);
         }
     }
 }
