@@ -41,11 +41,8 @@ public class IntegratedControlScheme extends LinearOpMode {
     public DcMotor  leftDrive   = null;
     public DcMotor  rightDrive  = null;
     public DcMotor  RVAMotor1   = null;
-    public DcMotor  RVAMotor2  = null;
 
     public Servo clawFinger = null;
-    public Servo clawPalm = null;
-    public Servo clawWrist = null;
 
     @Override
     public void runOpMode() {
@@ -66,10 +63,7 @@ public class IntegratedControlScheme extends LinearOpMode {
         leftDrive  = hardwareMap.get(DcMotor.class, "MotorA");
         rightDrive = hardwareMap.get(DcMotor.class, "MotorB");
         RVAMotor1  = hardwareMap.get(DcMotor.class, "MotorC");
-        RVAMotor2 = hardwareMap.get(DcMotor.class, "MotorD");
         clawFinger = hardwareMap.get(Servo.class, "ServoFinger");
-        clawPalm = hardwareMap.get(Servo.class, "ServoPalm");
-        clawWrist = hardwareMap.get(Servo.class, "ServoWrist");
 
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
@@ -78,11 +72,8 @@ public class IntegratedControlScheme extends LinearOpMode {
         rightDrive.setDirection(DcMotor.Direction.FORWARD);
 
         RVAMotor1.setDirection(DcMotor.Direction.FORWARD);
-        RVAMotor2.setDirection(DcMotor.Direction.REVERSE);
 
         clawFinger.setPosition(0.7);
-        clawPalm.setPosition(0.2);
-        clawWrist.setPosition(0.3);
 
         // Send telemetry message to signify robot waiting;
         telemetry.addLine("Ready to start, good luck!");
@@ -107,15 +98,9 @@ public class IntegratedControlScheme extends LinearOpMode {
                 fingerPos = "Closed";
             }
             else if (gamepad2.right_trigger >= 0.4){
-                clawFinger.setPosition(1); //open
+                clawFinger.setPosition(0.4); //open
                 fingerPos = "Open";
             }
-
-            //Raise or lower claw
-            if (Math.abs(wrist) >= 0.2){
-                wristTarget += wrist * clawSpeed;
-            }
-            clawWrist.setPosition(wristTarget);
 
             //Handle speed multiplication
             if (gamepad1.a) {
@@ -131,16 +116,15 @@ public class IntegratedControlScheme extends LinearOpMode {
 
             //Handle speed multiplication
             if (gamepad1.left_trigger >= 0.4){
-                ArmPower = -0.65;
+                ArmPower = -0.3;
             }
             else if (gamepad1.right_trigger >= 0.4){
-                ArmPower = 0.65;
+                ArmPower = 0.3;
             }
             else {
                 ArmPower = 0;
             }
             RVAMotor1.setPower(ArmPower);
-            RVAMotor2.setPower(ArmPower);
 
             //Drive!
             // Combine drive and turn for blended motion.
@@ -161,10 +145,10 @@ public class IntegratedControlScheme extends LinearOpMode {
             telemetry.addData("Speed: ", "String", speed);
             telemetry.addData("Stick X: ",  "%.2f", turn);
             telemetry.addData("Stick Y: ", "%.2f", (drive * -1));
-
-            telemetry.addData("Fingers: ", fingerPos);
-            telemetry.addData("Left stick: ",  "%.2f", wrist);
-            telemetry.addData("Right stick: ", "%.2f", palm);
+            telemetry.addData("Fingers are: ", fingerPos);
+            telemetry.addData("Power: ", "%.2f", ArmPower);
+            telemetry.addData("RVA Motor A Encoder: %7d", RVAMotor1.getCurrentPosition());
+            telemetry.addData("Claw Finger: ", fingerPos);
             telemetry.update();
             // Pace this loop so jaw action is reasonable speed.
             sleep(50);

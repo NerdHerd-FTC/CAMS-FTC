@@ -41,7 +41,6 @@ public class SumedhOnlyControlScheme extends LinearOpMode {
     public DcMotor  leftDrive   = null;
     public DcMotor  rightDrive  = null;
     public DcMotor  RVAMotor1   = null;
-    public DcMotor  RVAMotor2  = null;
     public Servo clawFinger = null;
 
     private ElapsedTime runtime = new ElapsedTime();
@@ -68,7 +67,6 @@ public class SumedhOnlyControlScheme extends LinearOpMode {
         rightDrive = hardwareMap.get(DcMotor.class, "MotorB");
 
         RVAMotor1  = hardwareMap.get(DcMotor.class, "MotorC");
-        RVAMotor2 = hardwareMap.get(DcMotor.class, "MotorD");
 
         clawFinger = hardwareMap.get(Servo.class, "ServoFinger");
 
@@ -78,16 +76,12 @@ public class SumedhOnlyControlScheme extends LinearOpMode {
         leftDrive.setDirection(DcMotor.Direction.REVERSE);
         rightDrive.setDirection(DcMotor.Direction.FORWARD);
         RVAMotor1.setDirection(DcMotor.Direction.FORWARD);
-        RVAMotor2.setDirection(DcMotor.Direction.REVERSE);
 
         RVAMotor1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        RVAMotor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         RVAMotor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        RVAMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         RVAMotor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        RVAMotor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         clawFinger.setPosition(0);
 
@@ -120,16 +114,15 @@ public class SumedhOnlyControlScheme extends LinearOpMode {
             }
 
             if (gamepad1.left_trigger >= 0.4){
-                ArmPower = -0.65;
+                ArmPower = -0.3;
             }
             else if (gamepad1.right_trigger >= 0.4){
-                ArmPower = 0.65;
+                ArmPower = 0.3;
             }
             else {
                 ArmPower = 0;
             }
             RVAMotor1.setPower(ArmPower);
-            RVAMotor2.setPower(ArmPower);
 
             //Handle claw open and close
             if (gamepad1.left_bumper){
@@ -163,7 +156,6 @@ public class SumedhOnlyControlScheme extends LinearOpMode {
             telemetry.addData("Fingers are: ", fingerPos);
             telemetry.addData("Power: ", "%.2f", ArmPower);
             telemetry.addData("RVA Motor A Encoder: %7d", RVAMotor1.getCurrentPosition());
-            telemetry.addData("RVA Motor B Encoder: %7d", RVAMotor2.getCurrentPosition());
             telemetry.addData("Claw Finger: ", fingerPos);
             telemetry.update();
 

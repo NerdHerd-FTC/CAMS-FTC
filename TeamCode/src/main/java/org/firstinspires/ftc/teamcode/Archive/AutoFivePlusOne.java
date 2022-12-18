@@ -17,7 +17,6 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- */
 
 package org.firstinspires.ftc.teamcode;
 
@@ -118,10 +117,10 @@ public class AutoFivePlusOne extends LinearOpMode
 
         telemetry.setMsTransmissionInterval(50);
 
-        /*
+
          * The INIT-loop:
          * This REPLACES waitForStart!
-         */
+
         while (!isStarted() && !isStopRequested())
         {
             ArrayList<AprilTagDetection> currentDetections = aprilTagDetectionPipeline.getLatestDetections();
@@ -175,12 +174,12 @@ public class AutoFivePlusOne extends LinearOpMode
         }
 
 
-        /*
+
          * The START command just came in: now work off the latest snapshot acquired
          * during the init loop.
-         */
 
-        /* Update the telemetry */
+
+         Update the telemetry
         if(tagOfInterest != null)
         {
             telemetry.addLine(String.format(Locale.US, "Located tag %d!", tagOfInterest.id));
@@ -256,3 +255,4 @@ public class AutoFivePlusOne extends LinearOpMode
         }
     }
 }
+*/

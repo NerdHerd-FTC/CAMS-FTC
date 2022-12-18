@@ -28,8 +28,9 @@
          * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
          */
 
-        package org.firstinspires.ftc.teamcode;
+        package org.firstinspires.ftc.teamcode.V2Unused;
         import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+        import com.qualcomm.robotcore.eventloop.opmode.Disabled;
         import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
         import com.qualcomm.robotcore.hardware.DcMotor;
 
@@ -45,6 +46,7 @@
          * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
          */
         @Autonomous(name="PID Testing", group="Robot")
+        @Disabled
         public class PD_Prototype extends LinearOpMode {
 
             static final double     COUNTS_PER_MOTOR_REV    = 28 ;    //UltraPlanetary Gearbox Kit & HD Hex Motor

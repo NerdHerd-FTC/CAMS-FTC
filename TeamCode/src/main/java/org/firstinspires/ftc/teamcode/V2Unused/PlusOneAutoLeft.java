@@ -18,14 +18,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.V2Unused;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.teamcode.V2Unused.AprilTagDetectionPipeline;
 import org.openftc.apriltag.AprilTagDetection;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
@@ -34,13 +36,12 @@ import org.openftc.easyopencv.OpenCvCameraRotation;
 import java.util.ArrayList;
 import java.util.Locale;
 
-@Autonomous(name="RIGHT Plus One", group="Robot")
-public class PlusOneAutoRight extends LinearOpMode
+@Autonomous(name="LEFT Plus One", group="Robot")
+@Disabled
+public class PlusOneAutoLeft extends LinearOpMode
 {
     public DcMotor leftDrive = null;
     public DcMotor rightDrive = null;
-    public DcMotor  RVAMotor1   = null;
-    public DcMotor  RVAMotor2  = null;
 
     private ElapsedTime runtime = new ElapsedTime();
 
@@ -55,7 +56,6 @@ public class PlusOneAutoRight extends LinearOpMode
     static final double     WHEEL_DIAMETER_INCH     = 3.5;    // For figuring circumference: 90mm
     static final double     COUNTS_PER_INCH  = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) / (WHEEL_DIAMETER_INCH * Math.PI);
 
-    //from Macros.java
     static final double     RVA_COUNTS_PER_MOTOR_REV    = 288 ;    //Core Hex Motor
     static final double     RVA_DRIVE_GEAR_REDUCTION    = 4.167;   //gear ratio of gears and sprockets (125t/15t * 20t/40t = 4.167)
     static final double     FINAL_GEAR_DIAMETER_INCH     = 1.60;    //diameter of starting, 15t gear (CHECK THIS NUMBER!!)
@@ -63,7 +63,7 @@ public class PlusOneAutoRight extends LinearOpMode
     static final double     RVA_STARTING_INCHES = 16; //CHECK THIS NUMBER - RVA elevated to height
 
     static final double     RVA_INCHES_TO_REACH = 33.5 - RVA_STARTING_INCHES; //goes to high junction - adjust this number for claw
-    static final double RVA_HEIGHT_TICKS = RVA_INCHES_TO_REACH * RVA_COUNTS_PER_INCH;
+    static final double     RVA_TICKS_TO_REACH = RVA_INCHES_TO_REACH * RVA_COUNTS_PER_INCH;
 
     OpenCvCamera camera;
     AprilTagDetectionPipeline aprilTagDetectionPipeline;
@@ -92,33 +92,23 @@ public class PlusOneAutoRight extends LinearOpMode
     {
         leftDrive = hardwareMap.get(DcMotor.class, "MotorA");
         rightDrive = hardwareMap.get(DcMotor.class, "MotorB");
-        RVAMotor1  = hardwareMap.get(DcMotor.class, "MotorC");
-        RVAMotor2 = hardwareMap.get(DcMotor.class, "MotorD");
 
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
         // Note: The settings here assume direct drive on left and right wheels.  Gear Reduction or 90 Deg drives may require direction flips
         leftDrive.setDirection(DcMotor.Direction.REVERSE);
         rightDrive.setDirection(DcMotor.Direction.FORWARD);
-        RVAMotor1.setDirection(DcMotor.Direction.FORWARD);
-        RVAMotor2.setDirection(DcMotor.Direction.REVERSE);
 
+        // If there are encoders connected, switch to RUN_USING_ENCODER mode for greater accuracy
         leftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        RVAMotor1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        RVAMotor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        RVAMotor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        RVAMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-        RVAMotor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        RVAMotor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam"), cameraMonitorViewId);
-        aprilTagDetectionPipeline = new AprilTagDetectionPipeline(tagsize, fx, fy, cx, cy);
+        aprilTagDetectionPipeline = new org.firstinspires.ftc.teamcode.V2Unused.AprilTagDetectionPipeline(tagsize, fx, fy, cx, cy);
 
         camera.setPipeline(aprilTagDetectionPipeline);
         camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
@@ -210,29 +200,29 @@ public class PlusOneAutoRight extends LinearOpMode
         }
         telemetry.update();
 
-        //navigate to high junction
-        encoderDrive(0.5, 54, 54, 0); //move forward to high junction
-        encoderDrive(0.5, -6.5, 6.5, 2); //turn 45 degrees to the left
-
         //go to location
         if(tagOfInterest == null || tagOfInterest.id == LEFT){
-            encoderDrive(0.5, -6.5, 6.5, 1); //turn 45 degrees to the left (90 deg total)
-            encoderDrive(0.5, 20, 20, 0); //move forward to get to loc
-            encoderDrive(0.5, -11, 11, 0); //turn 90 to be straight
-            encoderDrive(0.5, 12, 12, 0);
+            //Move forward ~28.5" = 23.5" + 3" + 2" (clear first tile then clear half of junction diameter then 2 inches for clearance)
+            encoderDrive(0.1, 23, 23);
+            //turn 90 degrees left
+            encoderDrive(0.1, -11, 11);
+            //move forward ~24"
+            encoderDrive(0.1, 22, 22);
         }else if(tagOfInterest.id == MIDDLE){
-            encoderDrive(0.5, 6.5, -6.5, 1); //return to straight orientation
-            encoderDrive(0.5, -10, -10, 0); //return to straight orientation
+            //move forward 87 cm (34.25") to sit in the middle of the two tiles in front
+            encoderDrive(0.1, 34, 34);
         }else{
-            encoderDrive(0.5, 16.5, -16.5, 1); //turn 45 degrees to the right (90 deg total)
-            encoderDrive(0.5, 20, 20, 0); //move forward to get to loc
-            encoderDrive(0.5, 11, -11, 0); //turn 90 right to be straight
-            encoderDrive(0.5, 12, 12, 0);
+            //Move forward ~28.5" = 23.5" + 3" + 2" (clear first tile then clear half of junction diameter then 2 inches for clearance)
+            encoderDrive(0.1, 23, 23);
+            //turn 90 degrees right
+            encoderDrive(0.1, 11, -11);
+            //move forward ~19"
+            encoderDrive(0.1, 22, 22);
         }
     }
 
     //from RobotAutoDriveByEncoder_Linear example
-    public void encoderDrive(double speed, double leftInches, double rightInches, double lifting) {
+    public void encoderDrive(double speed, double leftInches, double rightInches) {
         int newLeftTarget;
         int newRightTarget;
 
@@ -252,29 +242,6 @@ public class PlusOneAutoRight extends LinearOpMode
             leftDrive.setPower(Math.abs(speed));
             rightDrive.setPower(Math.abs(speed));
 
-            if (lifting == 2) {
-                RVAMotor1.setTargetPosition((int) RVA_HEIGHT_TICKS);
-                RVAMotor2.setTargetPosition((int) RVA_HEIGHT_TICKS);
-
-                RVAMotor1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                RVAMotor2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-                RVAMotor1.setPower(0.65);
-                RVAMotor2.setPower(0.65);
-            } else if (lifting == 1) {
-                RVAMotor1.setTargetPosition(0);
-                RVAMotor2.setTargetPosition(0);
-
-                RVAMotor1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                RVAMotor2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-                RVAMotor1.setPower(0.65);
-                RVAMotor2.setPower(0.65);
-            } else {
-                RVAMotor1.setPower(0);
-                RVAMotor2.setPower(0);
-            }
-
             // keep looping while we are still active, and there is time left, and both motors are running.
             // Note: We use (isBusy() && isBusy()) in the loop test, which means that when EITHER motor hits
             // its target position, the motion will stop.  This is "safer" in the event that the robot will
@@ -284,38 +251,16 @@ public class PlusOneAutoRight extends LinearOpMode
             while (opModeIsActive() &&
                     (leftDrive.isBusy() && rightDrive.isBusy())) {
 
-                if (!RVAMotor1.isBusy() && !RVAMotor2.isBusy()) {
-                    RVAMotor1.setPower(0);
-                    RVAMotor2.setPower(0);
-                }
-
                 // Display it for the driver.
                 telemetry.addData("Running to",  " %7d :%7d", newLeftTarget,  newRightTarget);
                 telemetry.addData("Currently at",  " at %7d :%7d",
                         leftDrive.getCurrentPosition(), rightDrive.getCurrentPosition());
-                telemetry.addData("RVA Motor A Encoder: %7d", RVAMotor1.getCurrentPosition());
-                telemetry.addData("RVA Motor B Encoder: %7d", RVAMotor2.getCurrentPosition());
-                telemetry.addData("\nRVA Motor A TARGET: %7d", RVAMotor1.getTargetPosition());
-                telemetry.addData("RVA Motor B TARGET: %7d", RVAMotor2.getTargetPosition());
                 telemetry.update();
             }
 
             // Stop all motion;
             leftDrive.setPower(0);
             rightDrive.setPower(0);
-
-            while (opModeIsActive() && RVAMotor1.isBusy() && RVAMotor2.isBusy()) { //ideally we have the RVA method and Drive method run concurrently
-                telemetry.addLine("No drive movement.");
-                telemetry.addData("RVA Motor A Encoder: %7d", RVAMotor1.getCurrentPosition());
-                telemetry.addData("RVA Motor B Encoder: %7d", RVAMotor2.getCurrentPosition());
-                telemetry.addData("\nRVA Motor A TARGET: %7d", RVAMotor1.getTargetPosition());
-                telemetry.addData("RVA Motor B TARGET: %7d", RVAMotor2.getTargetPosition());
-                telemetry.update();
-            }
-
-            //stop RVA motion
-            RVAMotor1.setPower(0);
-            RVAMotor2.setPower(0);
 
             // Turn off RUN_TO_POSITION
             leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);

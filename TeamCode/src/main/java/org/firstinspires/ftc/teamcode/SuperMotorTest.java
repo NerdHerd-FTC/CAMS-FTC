@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -10,6 +11,7 @@ import java.util.List;
 
 //Basically a motor test, but it can test any number of motors up to 4
 @TeleOp(name="Super Motor Test", group="Robot")
+@Disabled
 public class SuperMotorTest extends LinearOpMode {
     /* Declare OpMode members. */
     public DcMotor Motor1   = null;
