@@ -57,7 +57,7 @@ import com.qualcomm.robotcore.hardware.Servo;
  */
 
 @Autonomous(name="Robot: STRAIGHT", group="Robot")
-//@Disabled
+@Disabled
 public class RobotStartLEFT extends LinearOpMode {
 
     /* Declare OpMode members. */

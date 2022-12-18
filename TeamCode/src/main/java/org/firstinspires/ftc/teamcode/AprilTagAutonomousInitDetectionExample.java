@@ -39,7 +39,7 @@ package org.firstinspires.ftc.teamcode;
         import org.openftc.easyopencv.OpenCvInternalCamera;
 
         import java.util.ArrayList;
-///sabled
+@Disabled
 @Autonomous
 public class AprilTagAutonomousInitDetectionExample extends LinearOpMode {
     OpenCvCamera camera;
