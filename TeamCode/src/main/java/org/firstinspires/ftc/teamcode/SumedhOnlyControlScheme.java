@@ -35,7 +35,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 /**
  * Teleop Final Control Scheme - Uses Triggers for Speed Mult
  */
-@TeleOp(name= "Sumedh ONLY: Final Control Scheme", group="Robot")
+@TeleOp(name= "Single Driver", group="Robot")
 public class SumedhOnlyControlScheme extends LinearOpMode {
     /* Declare OpMode members. */
     public DcMotor  leftDrive   = null;
@@ -83,7 +83,6 @@ public class SumedhOnlyControlScheme extends LinearOpMode {
 
         RVAMotor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        clawFinger.setPosition(0);
 
         runtime.reset();
 
@@ -97,7 +96,7 @@ public class SumedhOnlyControlScheme extends LinearOpMode {
             // Run wheels in POV mode (note: The joystick goes negative when pushed forward, so negate it)
             // In this mode the Left stick moves the robot fwd and back, the Right stick turns left and right.
             // This way it's also easy to just drive straight, or just turn.
-            drive = -1 * gamepad1.left_stick_y;
+            drive = gamepad1.left_stick_y;
             turn  =  gamepad1.right_stick_x;
 
             //Handle speed multiplication
@@ -126,7 +125,7 @@ public class SumedhOnlyControlScheme extends LinearOpMode {
 
             //Handle claw open and close
             if (gamepad1.left_bumper){
-                clawFinger.setPosition(0); //close
+                clawFinger.setPosition(0.2); //close
                 fingerPos = "Closed";
             }
             else if (gamepad1.right_bumper){

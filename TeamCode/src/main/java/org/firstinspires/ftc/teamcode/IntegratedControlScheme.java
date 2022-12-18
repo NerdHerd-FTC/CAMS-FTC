@@ -73,8 +73,6 @@ public class IntegratedControlScheme extends LinearOpMode {
 
         RVAMotor1.setDirection(DcMotor.Direction.FORWARD);
 
-        clawFinger.setPosition(0.7);
-
         // Send telemetry message to signify robot waiting;
         telemetry.addLine("Ready to start, good luck!");
         telemetry.update();
@@ -85,7 +83,7 @@ public class IntegratedControlScheme extends LinearOpMode {
             // Run wheels in POV mode (note: The joystick goes negative when pushed forward, so negate it)
             // In this mode the Left stick moves the robot fwd and back, the Right stick turns left and right.
             // This way it's also easy to just drive straight, or just turn.
-            drive = -1 * gamepad1.left_stick_y;
+            drive = gamepad1.left_stick_y;
             turn  =  gamepad1.right_stick_x;
 
             //Wrist movement
