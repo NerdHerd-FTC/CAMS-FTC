@@ -36,13 +36,14 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * Teleop Final Control Scheme - Uses Triggers for Speed Mult
  */
 @TeleOp(name= "Single Driver", group="Robot")
-public class SumedhOnlyControlScheme extends LinearOpMode {
+public class SingleDriver extends LinearOpMode {
     /* Declare OpMode members. */
     public DcMotor  leftDrive   = null;
     public DcMotor  rightDrive  = null;
     public DcMotor  RVAMotor1   = null;
     public Servo clawFinger = null;
 
+    static final int  TICKS_TO_REACH = 770;
     private ElapsedTime runtime = new ElapsedTime();
 
     @Override
@@ -54,9 +55,6 @@ public class SumedhOnlyControlScheme extends LinearOpMode {
         double SPEED_MULT = 0.5;
 
         double ArmPower;
-        double fingerTarget = 0.7;
-        double wristTarget = 0.3;
-        final double CLAW_SPEED = 0.05; //strictly less than 1
 
         //Telemetry update variables:
         String speed = "Normal";
@@ -100,7 +98,7 @@ public class SumedhOnlyControlScheme extends LinearOpMode {
             turn  =  gamepad1.right_stick_x;
 
             //Handle speed multiplication
-            if (gamepad1.a && runtime.seconds() >= 2) {
+            if (gamepad1.x && runtime.seconds() >= 2) {
                 runtime.reset();
                 if (SPEED_MULT <= 0.25) {
                     SPEED_MULT = 0.5;
@@ -112,11 +110,38 @@ public class SumedhOnlyControlScheme extends LinearOpMode {
                 }
             }
 
+            //RVA Macro!
+
+            //set power to zero when motors are off
+            if (!RVAMotor1.isBusy()) {
+                RVAMotor1.setPower(0);
+                RVAMotor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            }
+
+            //macro
+            if (gamepad1.b) { //kill switch!
+                RVAMotor1.setPower(0);
+                RVAMotor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            } else if (gamepad1.y) { //go up
+                RVAMotor1.setTargetPosition(TICKS_TO_REACH);
+                RVAMotor1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+                RVAMotor1.setPower(0.65);
+            } else if (gamepad1.a) { //go down
+                RVAMotor1.setTargetPosition(0);
+
+                RVAMotor1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+                RVAMotor1.setPower(0.65);
+            }
+
             if (gamepad1.left_trigger >= 0.4){
-                ArmPower = -0.3;
+                RVAMotor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                ArmPower = -0.4;
             }
             else if (gamepad1.right_trigger >= 0.4){
-                ArmPower = 0.3;
+                RVAMotor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                ArmPower = 0.4;
             }
             else {
                 ArmPower = 0;
@@ -157,7 +182,6 @@ public class SumedhOnlyControlScheme extends LinearOpMode {
             telemetry.addData("RVA Motor A Encoder: %7d", RVAMotor1.getCurrentPosition());
             telemetry.addData("Claw Finger: ", fingerPos);
             telemetry.update();
-
 
             // Pace this loop so jaw action is reasonable speed.
             sleep(50);
