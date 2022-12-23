@@ -35,15 +35,17 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 /**
  * Teleop Final Control Scheme - Uses Triggers for Speed Mult
  */
-@TeleOp(name= "Single Driver", group="Robot")
-public class SingleDriver extends LinearOpMode {
+@TeleOp(name= "Single Driver - One Arm", group="Robot")
+public class SingleDriverSingleArm extends LinearOpMode {
     /* Declare OpMode members. */
     public DcMotor  leftDrive   = null;
     public DcMotor  rightDrive  = null;
-    public DcMotor  RVAMotor1   = null;
+    public DcMotor Arm = null;
     public Servo clawFinger = null;
 
     static final int  TICKS_TO_REACH = 770;
+    static final int  GROUND = 0;
+    static final double MACRO_POWER = 0.65; //for quick adjustments
     private ElapsedTime runtime = new ElapsedTime();
 
     @Override
@@ -54,7 +56,7 @@ public class SingleDriver extends LinearOpMode {
         double turn;
         double SPEED_MULT = 0.5;
 
-        double ArmPower;
+        double ArmPower = 0.4;
 
         //Telemetry update variables:
         String speed = "Normal";
@@ -64,7 +66,7 @@ public class SingleDriver extends LinearOpMode {
         leftDrive  = hardwareMap.get(DcMotor.class, "MotorA");
         rightDrive = hardwareMap.get(DcMotor.class, "MotorB");
 
-        RVAMotor1  = hardwareMap.get(DcMotor.class, "MotorC");
+        Arm = hardwareMap.get(DcMotor.class, "MotorC");
 
         clawFinger = hardwareMap.get(Servo.class, "ServoFinger");
 
@@ -73,13 +75,13 @@ public class SingleDriver extends LinearOpMode {
         // Note: The settings here assume direct drive on left and right wheels.  Gear Reduction or 90 Deg drives may require direction flips
         leftDrive.setDirection(DcMotor.Direction.REVERSE);
         rightDrive.setDirection(DcMotor.Direction.FORWARD);
-        RVAMotor1.setDirection(DcMotor.Direction.FORWARD);
+        Arm.setDirection(DcMotor.Direction.FORWARD);
 
-        RVAMotor1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        Arm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-        RVAMotor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        Arm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        RVAMotor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        Arm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
 
         runtime.reset();
@@ -110,43 +112,36 @@ public class SingleDriver extends LinearOpMode {
                 }
             }
 
-            //RVA Macro!
-
             //set power to zero when motors are off
-            if (!RVAMotor1.isBusy()) {
-                RVAMotor1.setPower(0);
-                RVAMotor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            if (!Arm.isBusy()) {
+                Arm.setPower(0);
+                Arm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             }
 
             //macro
             if (gamepad1.b) { //kill switch!
-                RVAMotor1.setPower(0);
-                RVAMotor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                Arm.setPower(0);
+                Arm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             } else if (gamepad1.y) { //go up
-                RVAMotor1.setTargetPosition(TICKS_TO_REACH);
-                RVAMotor1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-                RVAMotor1.setPower(0.65);
+                Arm.setTargetPosition(TICKS_TO_REACH);
+                Arm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                Arm.setPower(MACRO_POWER);
             } else if (gamepad1.a) { //go down
-                RVAMotor1.setTargetPosition(0);
-
-                RVAMotor1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-                RVAMotor1.setPower(0.65);
+                Arm.setTargetPosition(GROUND); //ground
+                Arm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                Arm.setPower(MACRO_POWER);
             }
 
             if (gamepad1.left_trigger >= 0.4){
-                RVAMotor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                ArmPower = -0.4;
+                Arm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                Arm.setPower(-ArmPower);
             }
             else if (gamepad1.right_trigger >= 0.4){
-                RVAMotor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                ArmPower = 0.4;
+                Arm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                Arm.setPower(ArmPower);
+            } else if (Arm.getMode() == DcMotor.RunMode.RUN_USING_ENCODER) { //force it to stop if there's no macro involved & if there is no trigger action
+                Arm.setPower(0);
             }
-            else {
-                ArmPower = 0;
-            }
-            RVAMotor1.setPower(ArmPower);
 
             //Handle claw open and close
             if (gamepad1.left_bumper){
@@ -178,8 +173,8 @@ public class SingleDriver extends LinearOpMode {
             telemetry.addData("Stick X: ",  "%.2f", turn);
             telemetry.addData("Stick Y: ", "%.2f", (drive * -1));
             telemetry.addData("Fingers are: ", fingerPos);
-            telemetry.addData("Power: ", "%.2f", ArmPower);
-            telemetry.addData("RVA Motor A Encoder: %7d", RVAMotor1.getCurrentPosition());
+            telemetry.addData("Power: ", "%.2f", Arm.getPower());
+            telemetry.addData("Arm Encoder: %7d", Arm.getCurrentPosition());
             telemetry.addData("Claw Finger: ", fingerPos);
             telemetry.update();
 
