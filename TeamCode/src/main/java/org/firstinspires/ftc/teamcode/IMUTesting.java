@@ -26,22 +26,33 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package org.firstinspires.ftc.teamcode;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 /**
  * Teleop Final Control Scheme - Uses Triggers for Speed Mult
  */
-@TeleOp(name= "Single Driver - One Arm", group="Robot")
-public class SingleDriverSingleArm extends LinearOpMode {
+@TeleOp(name= "IMU Testing - TeleOP", group="Robot")
+public class IMUTesting extends LinearOpMode {
     /* Declare OpMode members. */
     public DcMotor  leftDrive   = null;
     public DcMotor  rightDrive  = null;
     public DcMotor Arm = null;
     public Servo clawFinger = null;
+    static RevHubOrientationOnRobot.LogoFacingDirection[] logoFacingDirections
+            = RevHubOrientationOnRobot.LogoFacingDirection.values();
+    static RevHubOrientationOnRobot.UsbFacingDirection[] usbFacingDirections
+            = RevHubOrientationOnRobot.UsbFacingDirection.values();
+    IMU imu;
 
     static final int  TICKS_TO_REACH = 770;
     static final int  GROUND = 0;
@@ -61,6 +72,9 @@ public class SingleDriverSingleArm extends LinearOpMode {
         //Telemetry update variables:
         String speed = "Normal";
         String fingerPos = "Closed";
+
+        //initialize IMU
+        imu = hardwareMap.get(IMU.class, "imu");
 
         // Define and Initialize Motors and Servos
         leftDrive  = hardwareMap.get(DcMotor.class, "MotorA");
@@ -83,6 +97,10 @@ public class SingleDriverSingleArm extends LinearOpMode {
 
         Arm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+        RevHubOrientationOnRobot.LogoFacingDirection logo = logoFacingDirections[0]; //logo facing UP
+        RevHubOrientationOnRobot.UsbFacingDirection usb = usbFacingDirections[4]; //usb ports facing to the LEFT
+        RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logo, usb);
+        imu.initialize(new IMU.Parameters(orientationOnRobot));
 
         runtime.reset();
 
@@ -174,7 +192,18 @@ public class SingleDriverSingleArm extends LinearOpMode {
             telemetry.addData("Stick Y: ", "%.2f", (drive * -1));
             telemetry.addData("Claw: ", fingerPos);
             telemetry.addData("Power: ", "%.2f", Arm.getPower());
-            telemetry.addData("Arm Encoder: %7d", Arm.getCurrentPosition());
+            telemetry.addData("Arm Encoder: %7d", Arm.getCurrentPosition() + "\n\n");
+
+            //IMU Telemetry
+            YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+            AngularVelocity angularVelocity = imu.getRobotAngularVelocity(AngleUnit.DEGREES);
+            telemetry.addData("Yaw (Z)", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.DEGREES));
+            telemetry.addData("Pitch (X)", "%.2f Deg.", orientation.getPitch(AngleUnit.DEGREES));
+            telemetry.addData("Roll (Y)", "%.2f Deg.\n", orientation.getRoll(AngleUnit.DEGREES));
+            telemetry.addData("Yaw (Z) velocity", "%.2f Deg/Sec", angularVelocity.zRotationRate);
+            telemetry.addData("Pitch (X) velocity", "%.2f Deg/Sec", angularVelocity.xRotationRate);
+            telemetry.addData("Roll (Y) velocity", "%.2f Deg/Sec", angularVelocity.yRotationRate);
+
             telemetry.update();
 
             // Pace this loop so jaw action is reasonable speed.

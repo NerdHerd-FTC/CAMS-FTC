@@ -150,7 +150,9 @@ public class ConceptExploringIMUOrientation extends LinearOpMode {
 
             // Display User instructions and IMU data
             telemetry.addData("logo Direction (set with bumpers)", logoFacingDirections[logoFacingDirectionPosition]);
-            telemetry.addData("usb Direction (set with triggers)", usbFacingDirections[usbFacingDirectionPosition] + "\n");
+            telemetry.addData("Logo Direction Raw Value", logoFacingDirectionPosition);
+            telemetry.addData("usb Direction (set with triggers)", usbFacingDirections[usbFacingDirectionPosition]);
+            telemetry.addData("usb Direction Raw Value", usbFacingDirectionPosition + "\n");
 
             if (orientationIsValid) {
                 YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
