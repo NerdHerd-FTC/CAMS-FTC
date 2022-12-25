@@ -32,8 +32,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 @Autonomous(name="PD with IMU", group="Robot")
-public class PDwithIMU extends LinearOpMode
-{
+public class PDwithIMU extends LinearOpMode {
     public DcMotor leftDrive = null;
     public DcMotor rightDrive = null;
 
@@ -43,10 +42,10 @@ public class PDwithIMU extends LinearOpMode
             = RevHubOrientationOnRobot.UsbFacingDirection.values();
     IMU imu;
 
-    static final double     COUNTS_PER_MOTOR_REV    = 28 ;    //UltraPlanetary Gearbox Kit & HD Hex Motor
-    static final double     DRIVE_GEAR_REDUCTION    = 20;   //gear ratio
-    static final double     WHEEL_DIAMETER_INCH     = 3.65;    // For figuring circumference: 90mm
-    static final double     COUNTS_PER_INCH  = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) / (WHEEL_DIAMETER_INCH * Math.PI);
+    static final double COUNTS_PER_MOTOR_REV = 28;    //UltraPlanetary Gearbox Kit & HD Hex Motor
+    static final double DRIVE_GEAR_REDUCTION = 20;   //gear ratio
+    static final double WHEEL_DIAMETER_INCH = 3.65;    // For figuring circumference: 90mm
+    static final double COUNTS_PER_INCH = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) / (WHEEL_DIAMETER_INCH * Math.PI);
 
     @Override
     public void runOpMode() {
@@ -84,8 +83,8 @@ public class PDwithIMU extends LinearOpMode
         //forwardPID(48);
         //builtIn(-48, -48);
         //builtIn(-48, -48);
-        turnIMU(90);
-        turnIMU(-90);
+        turnIMU(90); //COUNTER-CLOCKWISE (CCW)
+        turnIMU(-90); //CLOCKWISE (CW)
     }
 
     private void forwardPID(double targetInches) {
@@ -98,7 +97,7 @@ public class PDwithIMU extends LinearOpMode
         final double K_P_MOVE = 0.0004;
         final double K_D_MOVE = 0;
 
-        final double D_MULT_MOVE = K_D_MOVE/DELTA_T;
+        final double D_MULT_MOVE = K_D_MOVE / DELTA_T;
         while (opModeIsActive()) {
             location = leftDrive.getCurrentPosition();
             double prevError = error;
@@ -130,6 +129,7 @@ public class PDwithIMU extends LinearOpMode
             sleep(DELTA_T);
         }
     }
+
     private void builtIn(double leftInches, double rightInches) {
         int newLeftTarget = leftDrive.getCurrentPosition() + (int) (leftInches * COUNTS_PER_INCH);
         int newRightTarget = rightDrive.getCurrentPosition() + (int) (rightInches * COUNTS_PER_INCH);
@@ -155,17 +155,21 @@ public class PDwithIMU extends LinearOpMode
         }
     }
 
-    private void turnIMU (double degrees) {
+    private void turnIMU(double degrees) {
         //K constants
         final double K_P_MOVE = 0.0004;
         final double K_D_MOVE = 0;
 
-        while (opModeIsActive() && leftDrive.isBusy() && rightDrive.isBusy()) {
-            YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
-            double currentAngle = orientation.getYaw(AngleUnit.DEGREES);
+        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+        double currentAngle = orientation.getYaw(AngleUnit.DEGREES);
 
-            double error = degrees - currentAngle;
+        double error = degrees - currentAngle;
 
+        while (opModeIsActive() && Math.abs(error) > 2) {
+            orientation = imu.getRobotYawPitchRollAngles();
+            currentAngle = orientation.getYaw(AngleUnit.DEGREES);
+
+            error = degrees - currentAngle;
             //get most efficient angle (imu has angles from -180 to 180)
             if (error > 180) {
                 error -= 360;
@@ -173,8 +177,7 @@ public class PDwithIMU extends LinearOpMode
                 error += 360;
             }
 
-            //set power: find power value and restrict it to +- 1 and then flip it because our motors are weird
-            double power = Math.tanh(K_P_MOVE * error * 5.968915978362711); //convert angle to ticks so that the P still applies
+            double power = Math.tanh(K_P_MOVE * error * 5.969); //convert angle to ticks so that the P still applies
             leftDrive.setPower(-power);
             rightDrive.setPower(power);
 
@@ -183,6 +186,13 @@ public class PDwithIMU extends LinearOpMode
             telemetry.addData("Error", error);
             telemetry.addData("Yaw", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.DEGREES));
             telemetry.update();
+            sleep(50);
         }
+
+        telemetry.addLine("ROTATION FINISHED");
+        telemetry.addData("Target", degrees);
+        telemetry.addData("Error", error);
+        telemetry.addData("Yaw", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.DEGREES));
+        telemetry.update();
     }
 }
