@@ -83,23 +83,22 @@ public class EncoderOnly extends LinearOpMode
 
         waitForStart();
         // run until the end of the match (driver presses STOP)
-        while (opModeIsActive()) {
-            encoderDrive(0.5, 54, 54); //move forward to high junction
-            moveArm(true);
-            encoderDrive(0.5, -6.5, 6.5); //turn 45 degrees to the left
-            clawFinger.setPosition(0.5); //open
-            encoderDrive(0.5, 6.5, -6.5); //turn back 45 degrees
-            moveArm(false); //drop arm
-            encoderDrive(0.5, -10, -10); //move back 10 inches
+        //things are negated here because some hardware is reversed
+        encoderDrive(0.5, -54, -54); //move forward to high junction
+        moveArm(true);
+        encoderDrive(0.5, -6.5, 6.5); //turn 45 degrees to the left
+        while (Arm.isBusy()) {
 
-            //close loose-ends
-            while (Arm.isBusy()) {
-
-            }
-            Arm.setPower(0);
-            Arm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         }
-        //stop arm motion if opMode is stopped
+        clawFinger.setPosition(0.5); //open
+        encoderDrive(0.5, 6.5, -6.5); //turn back 45 degrees
+        moveArm(false); //drop arm
+        encoderDrive(0.5, 10, 10); //move back 10 inches
+
+        //close loose-ends
+        while (Arm.isBusy()) {
+
+        }
         Arm.setPower(0);
         Arm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }

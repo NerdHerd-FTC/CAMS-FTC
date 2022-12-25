@@ -28,7 +28,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 @Autonomous(name="PD with IMU", group="Robot")
-@Disabled
 public class PDwithIMU extends LinearOpMode
 {
     public DcMotor leftDrive = null;
@@ -36,7 +35,7 @@ public class PDwithIMU extends LinearOpMode
 
     static final double     COUNTS_PER_MOTOR_REV    = 28 ;    //UltraPlanetary Gearbox Kit & HD Hex Motor
     static final double     DRIVE_GEAR_REDUCTION    = 20;   //gear ratio
-    static final double     WHEEL_DIAMETER_INCH     = 3.8;    // For figuring circumference: 90mm
+    static final double     WHEEL_DIAMETER_INCH     = 3.65;    // For figuring circumference: 90mm
     static final double     COUNTS_PER_INCH  = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) / (WHEEL_DIAMETER_INCH * Math.PI);
 
     @Override
@@ -64,46 +63,58 @@ public class PDwithIMU extends LinearOpMode
 
         waitForStart();
         // run until the end of the match (driver presses STOP)
-        while (opModeIsActive()) {
-            forward(24);
-        }
+        forward(-48);
+        forward(48);
+        forward(-48);
+        forward(48);
+        forward(-48);
+        forward(48);
+        forward(-48);
+        forward(48);
+        forward(-48);
+        forward(48);
+        forward(-48);
+        forward(48);
     }
 
     private void forward(double targetInches) {
-
         int location = leftDrive.getCurrentPosition();
-        int target = (int) (COUNTS_PER_INCH * targetInches) + location; //in encoder ticks
+        final int target = (int) (COUNTS_PER_INCH * targetInches) + location; //in encoder ticks
         double error = (target - location);
         final long DELTA_T = 20;
 
         //K constants
-        final double K_P_MOVE = 0.01;
-        final double K_D_MOVE = 1;
+        final double K_P_MOVE = 0.0004;
+        final double K_D_MOVE = 0;
 
         final double D_MULT_MOVE = K_D_MOVE/DELTA_T;
         while (opModeIsActive()) {
             location = leftDrive.getCurrentPosition();
             double prevError = error;
-            error = (target - location) / COUNTS_PER_INCH;
+            error = (target - location);
             //P
             double P = K_P_MOVE * error;
             //D
             double D = D_MULT_MOVE * (error - prevError);
             //Set power using PID
-            double finalPower = (P + D);
+            double finalPower = Math.tanh(P + D); //cap power at += 1
             leftDrive.setPower(finalPower);
             rightDrive.setPower(finalPower);
 
-            if (Math.abs(error) <= 0.01) {
+            telemetry.addData("Location: ", leftDrive.getCurrentPosition());
+            telemetry.addData("Target: ", target);
+            telemetry.addData("Error Number: ", error);
+            telemetry.addData("Final Power: ", finalPower);
+            telemetry.addData("Target Inch: ", targetInches);
+            telemetry.update();
+
+            if (Math.abs(error) <= 10) {
                 leftDrive.setPower(0);
                 rightDrive.setPower(0);
-                sleep(3 * DELTA_T);
+                telemetry.update();
                 break;
             }
-            telemetry.addData("Error Number", error);
-            telemetry.addData("Final Power", finalPower);
-            telemetry.addData("Moving", targetInches);
-            telemetry.update();
+
             sleep(DELTA_T);
         }
     }
