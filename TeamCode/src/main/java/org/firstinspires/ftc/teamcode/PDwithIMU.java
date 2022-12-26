@@ -96,8 +96,13 @@ public class PDwithIMU extends LinearOpMode {
         //K constants
         final double K_P_MOVE = 0.0004;
         final double K_D_MOVE = 0;
+        final double K_P_TURN = 0.0004;
 
         final double D_MULT_MOVE = K_D_MOVE / DELTA_T;
+
+        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+        final double startingAngle = orientation.getYaw(AngleUnit.DEGREES);
+
         while (opModeIsActive()) {
             location = leftDrive.getCurrentPosition();
             double prevError = error;
@@ -107,16 +112,41 @@ public class PDwithIMU extends LinearOpMode {
             //D
             double D = D_MULT_MOVE * (error - prevError);
             //Set power using PID
-            double finalPower = Math.tanh(P + D); //cap power at += 1
-            leftDrive.setPower(finalPower);
-            rightDrive.setPower(finalPower);
+            double drivePower = Math.tanh(P + D); //cap power at += 1
+
+            orientation = imu.getRobotYawPitchRollAngles();
+            double currentAngle = orientation.getYaw(AngleUnit.DEGREES);
+
+            double turnError = startingAngle - currentAngle;
+
+            // Normalize the error to be within +/- 180 degrees
+            if (turnError > 180) {
+                turnError -= 360;
+            } else if (turnError < -180) {
+                turnError += 360;
+            }
+
+            // Get angle error
+            double correction = K_P_TURN * turnError * 5.969; //convert degree to ticks
+
+            double leftPower  = drivePower - correction;
+            double rightPower = drivePower + correction;
+
+            leftDrive.setPower(leftPower);
+            rightDrive.setPower(rightPower);
 
             telemetry.addLine("CUSTOM");
             telemetry.addData("Location: ", leftDrive.getCurrentPosition());
             telemetry.addData("Target: ", target);
             telemetry.addData("Error Number: ", error);
-            telemetry.addData("Final Power: ", finalPower);
+            telemetry.addData("Drive Power: ", drivePower);
+            telemetry.addData("Turn Power: ", correction);
+            telemetry.addData("Left Power: ", leftPower);
+            telemetry.addData("Right Power: ", rightPower);
             telemetry.addData("Target Inch: ", targetInches);
+            telemetry.addData("Starting Angle: ", startingAngle);
+            telemetry.addData("Error: ", turnError);
+            telemetry.addData("Yaw", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.DEGREES));
             telemetry.update();
 
             if (Math.abs(error) <= 10) {
