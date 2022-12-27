@@ -68,7 +68,7 @@ public class FivePlusOneRight extends LinearOpMode {
         leftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        telemetry.setMsTransmissionInterval(50);
+        telemetry.setMsTransmissionInterval(20);
 
         //initialize & setup IMU
         imu = hardwareMap.get(IMU.class, "imu");
@@ -82,31 +82,31 @@ public class FivePlusOneRight extends LinearOpMode {
         waitForStart();
         orientation = imu.getRobotYawPitchRollAngles();
         final double startingAngle = orientation.getYaw(AngleUnit.DEGREES);
-        forwardPID(-50.125, startingAngle);
+        forwardPID(-50.125, startingAngle, 0);
         turnIMU(45);
-        double cones = 1;
+        int cones = 1;
         while (cones <= 5) {
+            telemetry.addData("CURRENTLY ON CONE", cones);
             turnIMU(-90);
-            forwardPID(-27.625, startingAngle);
+            forwardPID(-27.625, -90, cones);
             //cone pick up here
-            forwardPID(27.625, startingAngle);
+            forwardPID(27.625, -90, cones);
             turnIMU(45);
-            forwardPID(-8.596, startingAngle);
-            //cone drop
-            forwardPID(8.596, startingAngle);
+            forwardPID(-8.596, 45, cones);
+            forwardPID(8.596, 45, cones);
             cones += 1;
         }
     }
 
-    private void forwardPID(double targetInches, double startingAngle) {
+    private void forwardPID(double targetInches, double startingAngle, int cones) {
         int location = leftDrive.getCurrentPosition();
         final int target = (int) (COUNTS_PER_INCH * targetInches) + location; //in encoder ticks
         double error = (target - location);
-        final long DELTA_T = 20;
+        final long DELTA_T = 20 + (long) telemetry.getMsTransmissionInterval();
 
         //K constants
         final double K_P_MOVE = 0.0008;
-        final double K_D_MOVE = 0.003;
+        final double K_D_MOVE = 0.0105;
 
         final double D_MULT_MOVE = K_D_MOVE / DELTA_T;
 
@@ -143,7 +143,7 @@ public class FivePlusOneRight extends LinearOpMode {
             leftDrive.setPower(leftPower);
             rightDrive.setPower(rightPower);
 
-            telemetry.addLine("CUSTOM");
+            telemetry.addData("CURRENTLY ON CONE ", cones);
             telemetry.addData("Location: ", leftDrive.getCurrentPosition());
             telemetry.addData("Target: ", target);
             telemetry.addData("Error Number: ", error);
@@ -168,34 +168,9 @@ public class FivePlusOneRight extends LinearOpMode {
         }
     }
 
-    private void builtIn(double leftInches, double rightInches) {
-        int newLeftTarget = leftDrive.getCurrentPosition() + (int) (leftInches * COUNTS_PER_INCH);
-        int newRightTarget = rightDrive.getCurrentPosition() + (int) (rightInches * COUNTS_PER_INCH);
-
-        if (opModeIsActive()) {
-            leftDrive.setTargetPosition(newLeftTarget);
-            rightDrive.setTargetPosition(newRightTarget);
-
-            // Turn On RUN_TO_POSITION
-            leftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            rightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        }
-        while (opModeIsActive() && leftDrive.isBusy() && rightDrive.isBusy()) {
-            YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles(); //get yaw from imu, helps to measure drift
-            AngularVelocity angularVelocity = imu.getRobotAngularVelocity(AngleUnit.DEGREES);
-
-            telemetry.addLine("BUILT IN");
-            telemetry.addData("Running to", newLeftTarget);
-            telemetry.addData("Currently at", leftDrive.getCurrentPosition());
-            telemetry.addData("Yaw", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.DEGREES));
-            telemetry.addData("Yaw Velocity", "%.2f Deg/Sec", angularVelocity.zRotationRate); //rotational location
-            telemetry.update();
-        }
-    }
-
     private void turnIMU(double degrees) {
         //K constants
-        final double K_P_MOVE = 0.0004;
+        final double K_P_MOVE = 0.0007;
         final double K_D_MOVE = 0;
 
         YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
@@ -224,13 +199,7 @@ public class FivePlusOneRight extends LinearOpMode {
             telemetry.addData("Error", error);
             telemetry.addData("Yaw", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.DEGREES));
             telemetry.update();
-            sleep(50);
+            sleep(20);
         }
-
-        telemetry.addLine("ROTATION FINISHED");
-        telemetry.addData("Target", degrees);
-        telemetry.addData("Error", error);
-        telemetry.addData("Yaw", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.DEGREES));
-        telemetry.update();
     }
 }
