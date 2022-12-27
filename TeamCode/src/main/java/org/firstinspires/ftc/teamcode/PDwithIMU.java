@@ -77,31 +77,28 @@ public class PDwithIMU extends LinearOpMode {
         RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logo, usb);
         imu.initialize(new IMU.Parameters(orientationOnRobot));
 
+        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+        telemetry.addData("Yaw", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.DEGREES));
+        telemetry.update();
         waitForStart();
+        orientation = imu.getRobotYawPitchRollAngles();
+        final double startingAngle = orientation.getYaw(AngleUnit.DEGREES);
         // run until the end of the match (driver presses STOP)
-        //forwardPID(-48);
-        //forwardPID(48);
-        //builtIn(-48, -48);
-        //builtIn(-48, -48);
-        turnIMU(90); //COUNTER-CLOCKWISE (CCW)
-        turnIMU(-90); //CLOCKWISE (CW)
+        forwardPID(-48, startingAngle);
+        forwardPID(48, startingAngle);
     }
 
-    private void forwardPID(double targetInches) {
+    private void forwardPID(double targetInches, double startingAngle) {
         int location = leftDrive.getCurrentPosition();
         final int target = (int) (COUNTS_PER_INCH * targetInches) + location; //in encoder ticks
         double error = (target - location);
         final long DELTA_T = 20;
 
         //K constants
-        final double K_P_MOVE = 0.0004;
-        final double K_D_MOVE = 0;
-        final double K_P_TURN = 0.0004;
+        final double K_P_MOVE = 0.0008;
+        final double K_D_MOVE = 0.003;
 
         final double D_MULT_MOVE = K_D_MOVE / DELTA_T;
-
-        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
-        final double startingAngle = orientation.getYaw(AngleUnit.DEGREES);
 
         while (opModeIsActive()) {
             location = leftDrive.getCurrentPosition();
@@ -112,8 +109,9 @@ public class PDwithIMU extends LinearOpMode {
             //D
             double D = D_MULT_MOVE * (error - prevError);
             //Set power using PID
-            double drivePower = Math.tanh(P + D); //cap power at += 1
+            double drivePower = P + D; //cap power at += 1
 
+            YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
             orientation = imu.getRobotYawPitchRollAngles();
             double currentAngle = orientation.getYaw(AngleUnit.DEGREES);
 
@@ -127,10 +125,10 @@ public class PDwithIMU extends LinearOpMode {
             }
 
             // Get angle error
-            double correction = K_P_TURN * turnError * 5.969; //convert degree to ticks
+            double correction = K_P_MOVE * turnError * 5.969; //convert degree to ticks
 
-            double leftPower  = drivePower - correction;
-            double rightPower = drivePower + correction;
+            double leftPower  = Math.tanh(drivePower - correction);
+            double rightPower = Math.tanh(drivePower + correction);
 
             leftDrive.setPower(leftPower);
             rightDrive.setPower(rightPower);
@@ -139,8 +137,8 @@ public class PDwithIMU extends LinearOpMode {
             telemetry.addData("Location: ", leftDrive.getCurrentPosition());
             telemetry.addData("Target: ", target);
             telemetry.addData("Error Number: ", error);
-            telemetry.addData("Drive Power: ", drivePower);
-            telemetry.addData("Turn Power: ", correction);
+            telemetry.addData("Raw Drive Power: ", drivePower);
+            telemetry.addData("Raw Turn Power: ", correction);
             telemetry.addData("Left Power: ", leftPower);
             telemetry.addData("Right Power: ", rightPower);
             telemetry.addData("Target Inch: ", targetInches);
@@ -149,7 +147,7 @@ public class PDwithIMU extends LinearOpMode {
             telemetry.addData("Yaw", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.DEGREES));
             telemetry.update();
 
-            if (Math.abs(error) <= 10) {
+            if (Math.abs(error) <= 15) {
                 leftDrive.setPower(0);
                 rightDrive.setPower(0);
                 telemetry.update();
@@ -171,6 +169,9 @@ public class PDwithIMU extends LinearOpMode {
             // Turn On RUN_TO_POSITION
             leftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             rightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            leftDrive.setPower(1.0);
+            rightDrive.setPower(1.0);
         }
         while (opModeIsActive() && leftDrive.isBusy() && rightDrive.isBusy()) {
             YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles(); //get yaw from imu, helps to measure drift
@@ -179,6 +180,7 @@ public class PDwithIMU extends LinearOpMode {
             telemetry.addLine("BUILT IN");
             telemetry.addData("Running to", newLeftTarget);
             telemetry.addData("Currently at", leftDrive.getCurrentPosition());
+            telemetry.addData("Power", leftDrive.getPower());
             telemetry.addData("Yaw", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.DEGREES));
             telemetry.addData("Yaw Velocity", "%.2f Deg/Sec", angularVelocity.zRotationRate); //rotational location
             telemetry.update();
@@ -187,7 +189,7 @@ public class PDwithIMU extends LinearOpMode {
 
     private void turnIMU(double degrees) {
         //K constants
-        final double K_P_MOVE = 0.0004;
+        final double K_P_MOVE = 0.0007;
         final double K_D_MOVE = 0;
 
         YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
