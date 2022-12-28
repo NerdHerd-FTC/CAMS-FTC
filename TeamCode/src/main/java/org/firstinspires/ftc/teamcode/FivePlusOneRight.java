@@ -137,8 +137,8 @@ public class FivePlusOneRight extends LinearOpMode {
             // Get angle error
             double correction = K_P_MOVE * turnError * 5.969; //convert degree to ticks
 
-            double leftPower  = Math.tanh(drivePower - correction);
-            double rightPower = Math.tanh(drivePower + correction);
+            double leftPower  = Math.tanh(drivePower - correction); //normalize power to between +- 1
+            double rightPower = Math.tanh(drivePower + correction); //normalize power to between +- 1
 
             leftDrive.setPower(leftPower);
             rightDrive.setPower(rightPower);
@@ -170,19 +170,30 @@ public class FivePlusOneRight extends LinearOpMode {
 
     private void turnIMU(double degrees) {
         //K constants
-        final double K_P_MOVE = 0.0007;
-        final double K_D_MOVE = 0;
+        final double K_P_TURN = 0.001;
+        final double K_D_TURN = 0.03;
+        final long DELTA_T = 20 + (long) telemetry.getMsTransmissionInterval();
+
+        final double D_MULT_TURN = K_D_TURN / DELTA_T;
 
         YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
         double currentAngle = orientation.getYaw(AngleUnit.DEGREES);
 
         double error = degrees - currentAngle;
+        //get most efficient angle (imu has angles from -180 to 180)
+        if (error > 180) {
+            error -= 360;
+        } else if (error < -180) {
+            error += 360;
+        }
 
         while (opModeIsActive() && Math.abs(error) > 2) {
             orientation = imu.getRobotYawPitchRollAngles();
             currentAngle = orientation.getYaw(AngleUnit.DEGREES);
 
+            double prevError = error;
             error = degrees - currentAngle;
+
             //get most efficient angle (imu has angles from -180 to 180)
             if (error > 180) {
                 error -= 360;
@@ -190,13 +201,17 @@ public class FivePlusOneRight extends LinearOpMode {
                 error += 360;
             }
 
-            double power = Math.tanh(K_P_MOVE * error * 5.969); //convert angle to ticks so that the P still applies
+            double P = K_P_TURN * error * 5.969;
+            double D = D_MULT_TURN * (prevError - error);
+
+            double power = Math.tanh(P + D); //convert angle to ticks so that the P still applies
             leftDrive.setPower(-power);
             rightDrive.setPower(power);
 
             telemetry.addLine("ROTATING");
             telemetry.addData("Target", degrees);
             telemetry.addData("Error", error);
+            telemetry.addData("Power", power);
             telemetry.addData("Yaw", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.DEGREES));
             telemetry.update();
             sleep(20);
