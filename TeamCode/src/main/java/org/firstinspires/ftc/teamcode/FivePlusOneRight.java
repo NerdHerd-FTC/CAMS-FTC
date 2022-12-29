@@ -47,6 +47,11 @@ public class FivePlusOneRight extends LinearOpMode {
     static final double WHEEL_DIAMETER_INCH = 3.65;    // For figuring circumference: 90mm
     static final double COUNTS_PER_INCH = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) / (WHEEL_DIAMETER_INCH * Math.PI);
 
+    static final double lowJunction = 0; //for RV4B
+    static final double highJunction = 0;
+    static final double groundJunction = 0;
+    double coneStack = 0; //know how high to reach to get the next cone
+
     @Override
     public void runOpMode() {
         leftDrive = hardwareMap.get(DcMotor.class, "MotorA");
@@ -82,23 +87,32 @@ public class FivePlusOneRight extends LinearOpMode {
         waitForStart();
         orientation = imu.getRobotYawPitchRollAngles();
         final double startingAngle = orientation.getYaw(AngleUnit.DEGREES);
-        forwardPID(-50.125, startingAngle, 0);
-        turnIMU(45);
-        int cones = 1;
-        while (cones <= 5) {
-            telemetry.addData("CURRENTLY ON CONE", cones);
-            turnIMU(-90);
-            forwardPID(-27.625, -90, cones);
-            //cone pick up here
-            forwardPID(27.625, -90, cones);
-            turnIMU(45);
-            forwardPID(-8.596, 45, cones);
-            forwardPID(8.596, 45, cones);
-            cones += 1;
+        //i can nearly guarantee this won't work but it's a starting point
+        //ideal objective is to score 42 pts: 1 on high junction (5 points), 4 on low junction (12 points), 1 on ground junction (5 points - 2 points from scoring and 3 points for ownership), plus park (20 points)
+        forwardPID(-50.125, startingAngle); //move forward to high junction
+        turnIMU(45); //turn to high junction
+        //lift arm & score cone
+        turnIMU(-90); //turn to cone stack
+        forwardPID(-27.625, -90); //move to cone stack
+        //cone pick up here & start to lift up arm
+        turnIMU(45); //turn to ground junction
+        forwardPID(-26.5, 45); //move to ground junction
+        //lower arm --> score --> move arm up (need to take measurements)
+        turnIMU(-135); //turn back to cone stack
+        forwardPID(-26.5, -135);
+        int lowJunctionCones = 1;
+        while (lowJunctionCones <= 4) {
+            //pick up cone
+            turnIMU(135);
+            forwardPID(-26.5, 135);
+            //raise arm to low junction & score
+            turnIMU(-45); //turn back to cone stack
+            forwardPID(-26.5, -45);
+            lowJunctionCones += 1;
         }
     }
 
-    private void forwardPID(double targetInches, double startingAngle, int cones) {
+    private void forwardPID(double targetInches, double startingAngle) {
         int location = leftDrive.getCurrentPosition();
         final int target = (int) (COUNTS_PER_INCH * targetInches) + location; //in encoder ticks
         double error = (target - location);
@@ -143,7 +157,6 @@ public class FivePlusOneRight extends LinearOpMode {
             leftDrive.setPower(leftPower);
             rightDrive.setPower(rightPower);
 
-            telemetry.addData("CURRENTLY ON CONE ", cones);
             telemetry.addData("Location: ", leftDrive.getCurrentPosition());
             telemetry.addData("Target: ", target);
             telemetry.addData("Error Number: ", error);
