@@ -29,11 +29,10 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
-@Autonomous(name="5+1 Right", group="Robot")
-public class FivePlusOneRight extends LinearOpMode {
+@Autonomous(name="+1 Right", group="Robot")
+public class PlusOne extends LinearOpMode {
     public DcMotor leftDrive = null;
     public DcMotor rightDrive = null;
     public DcMotor RV4BMotor1 = null;
@@ -107,35 +106,47 @@ public class FivePlusOneRight extends LinearOpMode {
         RevHubOrientationOnRobot.UsbFacingDirection usb = usbFacingDirections[4]; //usb ports facing to the LEFT
         RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logo, usb);
         imu.initialize(new IMU.Parameters(orientationOnRobot));
-        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
-        telemetry.addData("Yaw", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.DEGREES));
+        clawFinger.setPosition(clawClose);
 
-        waitForStart();
-        orientation = imu.getRobotYawPitchRollAngles();
-        final double startingAngle = orientation.getYaw(AngleUnit.DEGREES);
-        //i can nearly guarantee this won't work but it's a starting point
-        //ideal objective is to score 42 pts: 1 on high junction (5 points), 4 on low junction (12 points), 1 on ground junction (5 points - 2 points from scoring and 3 points for ownership), plus park (20 points)
-        forwardPID(-50.125, startingAngle); //move forward to high junction
-        turnIMU(45); //turn to high junction
-        //lift arm & score cone
-        turnIMU(-90); //turn to cone stack
-        forwardPID(-27.625, -90); //move to cone stack
-        //cone pick up here & start to lift up arm
-        turnIMU(45); //turn to ground junction
-        forwardPID(-26.5, 45); //move to ground junction
-        //lower arm --> score --> move arm up (need to take measurements)
-        turnIMU(-135); //turn back to cone stack
-        forwardPID(-26.5, -135);
-        int lowJunctionCones = 1;
-        while (lowJunctionCones <= 4) {
-            //pick up cone
-            turnIMU(135);
-            forwardPID(-26.5, 135);
-            //raise arm to low junction & score
-            turnIMU(-45); //turn back to cone stack
-            forwardPID(-26.5, -45);
-            lowJunctionCones += 1;
+        //wait for start
+        while (!isStarted() && !isStopRequested()) {
+            YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+            telemetry.addData("Yaw", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.DEGREES));
+            telemetry.update();
         }
+
+        //start
+        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+        final double startingAngle = orientation.getYaw(AngleUnit.DEGREES);
+
+        //move forward to high junction
+        forwardPID(-50.125, startingAngle);
+
+        //raise arm (async, in a sense)
+        armControl(highJunction);
+
+        //turn to high junction
+        turnIMU(45);
+
+        //wait until arm is at height
+        while (RV4BMotor1.isBusy() && RV4BMotor2.isBusy()) {
+
+        }
+        RV4BMotor1.setPower(0);
+        RV4BMotor2.setPower(0);
+
+        //open claw
+        clawFinger.setPosition(clawOpen);
+
+        //straighten
+        turnIMU(0);
+
+        //lower arm back to the ground
+        //wait to straighten before lowering to prevent getting stuck on the junction
+        armControl(0);
+
+        //close claw
+        clawFinger.setPosition(0);
     }
 
     private void forwardPID(double targetInches, double startingAngle) {
@@ -182,6 +193,12 @@ public class FivePlusOneRight extends LinearOpMode {
 
             leftDrive.setPower(leftPower);
             rightDrive.setPower(rightPower);
+
+            //set RV4B power to zero when motors are off - may be a redundancy
+            if (!RV4BMotor1.isBusy() && !RV4BMotor2.isBusy()) {
+                RV4BMotor1.setPower(0);
+                RV4BMotor2.setPower(0);
+            }
 
             telemetry.addData("Location: ", leftDrive.getCurrentPosition());
             telemetry.addData("Target: ", target);
@@ -247,6 +264,12 @@ public class FivePlusOneRight extends LinearOpMode {
             leftDrive.setPower(-power);
             rightDrive.setPower(power);
 
+            //set RV4B power to zero when motors are off - may be a redundancy
+            if (!RV4BMotor1.isBusy() && !RV4BMotor2.isBusy()) {
+                RV4BMotor1.setPower(0);
+                RV4BMotor2.setPower(0);
+            }
+
             telemetry.addLine("ROTATING");
             telemetry.addData("Target", degrees);
             telemetry.addData("Error", error);
@@ -267,4 +290,5 @@ public class FivePlusOneRight extends LinearOpMode {
         RV4BMotor1.setPower(ARM_POWER);
         RV4BMotor2.setPower(ARM_POWER);
     }
+
 }
