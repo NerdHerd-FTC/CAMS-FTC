@@ -25,7 +25,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.firstinspires.ftc.teamcode.Archive.V2Unused;
+package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -54,16 +54,17 @@ public class ReverseVirtualArmTestBETA extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        double ArmPower = 0;
+        double PDFPower = 0;
         int targTicks = 0;
         int error = 0;
         String fingerPos = "Closed";
 
         //Gain variables
+        final double LIMITER = 0.01;
         final double K_P = 7.5;
-        final double K_D = 3;
-        final double F = 0.1;
-        final double SLANT_GAIN = 0.01;
+        final double K_D = 4;
+        final double F = 0.5;
+        final double SLANT_GAIN = 1;
 
         final double D_Denominator = K_D / DELTA_T;
 
@@ -108,17 +109,19 @@ public class ReverseVirtualArmTestBETA extends LinearOpMode {
             final double P = error * K_P;
             //D
             final double D = (prevError - error) * D_Denominator;
-            ArmPower = (P + D) * LIMITER;
+            PDFPower = (P + D) * LIMITER;
             //F
             if (error > 0) {
-                ArmPower += F;
+                PDFPower += F;
             }
 
-            //Adjust so the RVA doesn't slant
-            double slantAdjust = SLANT_GAIN * ArmPower * (RVAMotor1.getCurrentPosition() - RVAMotor2.getCurrentPosition());
+            //Adjust so the RVA doesn't slant (using P control)
+            double slantAdjust = SLANT_GAIN * 0.01 * (RVAMotor1.getCurrentPosition() - RVAMotor2.getCurrentPosition());
 
-            RVAMotor1.setPower(ArmPower - slantAdjust);
-            RVAMotor2.setPower(ArmPower + slantAdjust);
+            double FinalPower1 = Math.tanh(PDFPower * (1 + slantAdjust));
+            double FinalPower2 = Math.tanh(PDFPower * (1 - slantAdjust));
+            RVAMotor1.setPower(FinalPower1);
+            RVAMotor2.setPower(FinalPower2);
 
             //Handle claw open and close
             //if (gamepad2.left_trigger >= 0.4){
@@ -130,13 +133,15 @@ public class ReverseVirtualArmTestBETA extends LinearOpMode {
              //   fingerPos = "Open";
             //}
 
-            telemetry.addData("Power: ", "%.2f", ArmPower);
+            telemetry.addData("Power", "%.2f", PDFPower);
+            telemetry.addData("Slant adjustment fraction", "%.2f", slantAdjust);
             telemetry.addData("RVA Motor A Encoder: %7d", RVAMotor1.getCurrentPosition());
             telemetry.addData("RVA Motor B Encoder: %7d", RVAMotor2.getCurrentPosition());
             telemetry.addData("Distance Traveled (inch) A: %7d", RVAMotor1.getCurrentPosition()/(int)COUNTS_PER_INCH);
             telemetry.addData("Distance Traveled (inch) B: %7d", RVAMotor2.getCurrentPosition()/(int)COUNTS_PER_INCH);
             telemetry.addData("Claw Finger: ", fingerPos);
             telemetry.update();
+            
             // Pace this loop so jaw action is reasonable speed.
             sleep(DELTA_T);
         }

@@ -37,14 +37,13 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * TelelOp for Double Reverse Virtual 4 Bar with Macro
  */
 @TeleOp(name= "Single Driver - RV4B", group="Robot")
-@Disabled
 public class SingleDriver4Bar extends LinearOpMode {
     /* Declare OpMode members. */
     public DcMotor  leftDrive   = null;
     public DcMotor  rightDrive  = null;
     public DcMotor RV4BMotor1 = null;
     public DcMotor RV4BMotor2 = null;
-    //public Servo clawFinger = null;
+    public Servo clawFinger = null;
 
     static final int  TICKS_TO_REACH = 770;
     static final double MACRO_POWER = Math.abs(0.65); //for quick adjustments
@@ -58,6 +57,7 @@ public class SingleDriver4Bar extends LinearOpMode {
         double drive;
         double turn;
         double SPEED_MULT = 0.5;
+        boolean xStorage = false;
 
         //Telemetry update variables:
         String speed = "Normal";
@@ -68,7 +68,7 @@ public class SingleDriver4Bar extends LinearOpMode {
         rightDrive = hardwareMap.get(DcMotor.class, "MotorB");
         RV4BMotor1 = hardwareMap.get(DcMotor.class, "MotorC");
         RV4BMotor2 = hardwareMap.get(DcMotor.class, "MotorD");
-        //clawFinger = hardwareMap.get(Servo.class, "ServoFinger");
+        clawFinger = hardwareMap.get(Servo.class, "ServoFinger");
 
         //core hex motors are facing opposite each other and will rotate in opposite directions
         RV4BMotor1.setDirection(DcMotor.Direction.FORWARD);
@@ -83,7 +83,6 @@ public class SingleDriver4Bar extends LinearOpMode {
         RV4BMotor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         RV4BMotor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        //clawFinger = hardwareMap.get(Servo.class, "ServoFinger");
 
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
@@ -107,8 +106,8 @@ public class SingleDriver4Bar extends LinearOpMode {
             turn  =  gamepad1.right_stick_x;
 
             //Handle speed multiplication
-            if (gamepad1.x && runtime.seconds() >= 2) {
-                runtime.reset();
+            if (gamepad1.x && !xStorage) {
+                xStorage = true;
                 if (SPEED_MULT <= 0.25) {
                     SPEED_MULT = 0.5;
                     speed = "Normal";
@@ -117,6 +116,9 @@ public class SingleDriver4Bar extends LinearOpMode {
                     SPEED_MULT = 0.25;
                     speed = "Slow";
                 }
+            }
+            else{
+                xStorage = false;
             }
 
             //set power to zero when motors are off
@@ -174,11 +176,11 @@ public class SingleDriver4Bar extends LinearOpMode {
 
             //Handle claw open and close
             if (gamepad1.left_bumper){
-                //clawFinger.setPosition(0.2); //close
+                clawFinger.setPosition(0.2); //close
                 fingerPos = "Closed";
             }
             else if (gamepad1.right_bumper){
-                //clawFinger.setPosition(0.5); //open
+                clawFinger.setPosition(0.5); //open
                 fingerPos = "Open";
             }
 
@@ -187,29 +189,25 @@ public class SingleDriver4Bar extends LinearOpMode {
             left = drive + turn;
             right = drive - turn;
             // Normalize the values so neither exceed +/FinalControlScheme- 1.0
-            if (left > 1.0) {
-                left = 1.0;
-            }
-            if (right > 1.0){
-                right = 1.0;
-            }
+            left = Math.tanh(left);
+            right = Math.tanh(right);
             // Output the safe vales to the motor drives.
-            leftDrive.setPower(Math.pow(left, 3) * SPEED_MULT);
-            rightDrive.setPower(Math.pow(right, 3) * SPEED_MULT);
+            leftDrive.setPower(left * SPEED_MULT);
+            rightDrive.setPower(right * SPEED_MULT);
 
             // Send telemetry message to signify robot running;
-            telemetry.addData("Speed: ", "String", speed);
-            telemetry.addData("Stick X: ",  "%.2f", turn);
-            telemetry.addData("Stick Y: ", "%.2f", (drive * -1));
-            //telemetry.addData("Claw: ", fingerPos);
-            telemetry.addData("RV4B Power A: ", "%.2f", RV4BMotor1.getPower());
-            telemetry.addData("RV4B Power B: ", "%.2f", RV4BMotor2.getPower());
-            telemetry.addData("RV4B Motor A Encoder: ", RV4BMotor1.getCurrentPosition());
-            telemetry.addData("RV4B Motor B Encoder: ", RV4BMotor2.getCurrentPosition());
+            telemetry.addData("Speed", speed);
+            telemetry.addData("Stick X",  "%.2f", turn);
+            telemetry.addData("Stick Y", "%.2f", (drive * -1));
+            telemetry.addData("Claw", fingerPos);
+            telemetry.addData("RV4B Power A", "%.2f", RV4BMotor1.getPower());
+            telemetry.addData("RV4B Power B", "%.2f", RV4BMotor2.getPower());
+            telemetry.addData("RV4B Motor A Encoder", RV4BMotor1.getCurrentPosition());
+            telemetry.addData("RV4B Motor B Encoder", RV4BMotor2.getCurrentPosition());
             telemetry.update();
 
             // Pace this loop so jaw action is reasonable speed.
-            sleep(50);
+            sleep(35);
         }
     }
 }
