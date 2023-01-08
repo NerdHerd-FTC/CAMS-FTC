@@ -74,8 +74,13 @@ public class PD_Prototype extends LinearOpMode {
         telemetry.update();
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
-        move(24);
-        turn(90);
+        move(tiles(2));
+        turn(-45);
+        move(3);
+        //DROP CONE
+        turn(45);
+        move(tiles(1));
+        //Parking
     }
 
     private void move(double targetInches) {
@@ -156,6 +161,10 @@ public class PD_Prototype extends LinearOpMode {
             telemetry.update();
             sleep(DELTA_T);
         }
+    }
+
+    private double tiles(double num){
+        return num * 23.5;
     }
 }
 
