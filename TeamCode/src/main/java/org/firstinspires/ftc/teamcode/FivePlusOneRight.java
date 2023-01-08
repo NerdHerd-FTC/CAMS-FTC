@@ -126,7 +126,7 @@ public class FivePlusOneRight extends LinearOpMode {
         //lower arm --> score --> move arm up (need to take measurements)
         turnIMU(-135); //turn back to cone stack
         forwardPID(-26.5, -135);
-        for (int i=1; i<5; i++) { //loop 4 times for 4 cones left in stack
+        for (int i=0; i<4; i++) { //loop 4 times for 4 cones left in stack
             //pick up cone
             turnIMU(135);
             forwardPID(-26.5, 135);
