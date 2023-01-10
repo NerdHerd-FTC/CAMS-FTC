@@ -157,8 +157,9 @@ public class RobotTeleopMain extends LinearOpMode {
             if (gamepad1.a) {
                 Servo1.setPosition(0.55);  //decrease to open more
             }
+
             if (gamepad1.b) {
-                Servo1.setPosition(0.35);  //increase to close more
+                Servo1.setPosition(0.25);  //increase to close more
             }
             //if(gamepad1.left_bumper && gamepad1.right_bumper) {
               //  Servo1.setPosition(0.55);

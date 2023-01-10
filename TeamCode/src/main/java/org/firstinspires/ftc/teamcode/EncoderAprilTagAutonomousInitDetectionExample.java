@@ -31,6 +31,7 @@ import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import java.util.ArrayList;
 ///sabled
@@ -47,6 +48,8 @@ public class EncoderAprilTagAutonomousInitDetectionExample extends LinearOpMode 
     // You will need to do your own calibration for other configurations!
     public DcMotor MotorA = null;
     public DcMotor MotorB = null;
+    public DcMotor LiftMotor = null;
+    public Servo Claw = null;
 
 
     private ElapsedTime runtime = new ElapsedTime();
@@ -84,15 +87,20 @@ public class EncoderAprilTagAutonomousInitDetectionExample extends LinearOpMode 
     public void runOpMode() {
         MotorA = hardwareMap.get(DcMotor.class, "MotorA");
         MotorB = hardwareMap.get(DcMotor.class, "MotorB");
+        LiftMotor = hardwareMap.get(DcMotor.class, "MotorC");
+        Claw = hardwareMap.get(Servo.class, "Servo1");
 
         MotorA.setDirection(DcMotor.Direction.FORWARD);
         MotorB.setDirection(DcMotor.Direction.REVERSE);
+        LiftMotor.setDirection(DcMotor.Direction.REVERSE);
 
         MotorA.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         MotorB.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        LiftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         MotorA.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         MotorB.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        LiftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
 
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
@@ -176,9 +184,14 @@ public class EncoderAprilTagAutonomousInitDetectionExample extends LinearOpMode 
             telemetry.update();
         }
 
+
         /* Actually do something useful */
         //go to location
-        if(tagOfInterest == null || tagOfInterest.id == LEFT){
+        if(tagOfInterest == null || tagOfInterest.id == MIDDLE){
+            //move forward 87 cm (34.25") to sit in the middle of the two tiles in front
+            encoderDrive(0.1, 34, 34);
+
+        }else if(tagOfInterest.id == LEFT){
             //Move forward ~28.5" = 23.5" + 3" + 2" (clear first tile then clear half of junction diameter then 2 inches for clearance)
             encoderDrive(0.1, 28, 28);
             //move back 2"
@@ -187,9 +200,6 @@ public class EncoderAprilTagAutonomousInitDetectionExample extends LinearOpMode 
             encoderDrive(0.1, -11, 11);
             //move forward ~24"
             encoderDrive(0.1, 21, 21);
-        }else if(tagOfInterest == null || tagOfInterest.id == MIDDLE){
-            //move forward 87 cm (34.25") to sit in the middle of the two tiles in front
-            encoderDrive(0.1, 34, 34);
         }else{
             //Move forward ~28.5" = 23.5" + 3" + 2" (clear first tile then clear half of junction diameter then 2 inches for clearance)
             encoderDrive(0.1, 28, 28);
@@ -200,6 +210,8 @@ public class EncoderAprilTagAutonomousInitDetectionExample extends LinearOpMode 
             //move forward ~19"
             encoderDrive(0.1, 21, 21);
         }
+
+
     }
 
     //from RobotAutoDriveByEncoder_Linear example
