@@ -25,7 +25,8 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.Archive;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -36,6 +37,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * Teleop Final Control Scheme - Uses Triggers for Speed Mult
  */
 @TeleOp(name= "Single Driver - One Arm", group="Robot")
+@Disabled
 public class SingleDriverSingleArm extends LinearOpMode {
     /* Declare OpMode members. */
     public DcMotor  leftDrive   = null;

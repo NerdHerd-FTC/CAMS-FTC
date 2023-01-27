@@ -108,12 +108,12 @@ public class SingleDriver4Bar extends LinearOpMode {
             //Handle speed multiplication
             if (gamepad1.x && !xStorage) {
                 xStorage = true;
-                if (SPEED_MULT <= 0.25) {
-                    SPEED_MULT = 0.5;
+                if (SPEED_MULT <= 0.35) {
+                    SPEED_MULT = 0.7;
                     speed = "Normal";
                 }
                 else {
-                    SPEED_MULT = 0.25;
+                    SPEED_MULT = 0.35;
                     speed = "Slow";
                 }
             }
@@ -176,7 +176,7 @@ public class SingleDriver4Bar extends LinearOpMode {
 
             //Handle claw open and close
             if (gamepad1.left_bumper){
-                clawFinger.setPosition(0.2); //close
+                clawFinger.setPosition(0.1); //cl`ose
                 fingerPos = "Closed";
             }
             else if (gamepad1.right_bumper){
