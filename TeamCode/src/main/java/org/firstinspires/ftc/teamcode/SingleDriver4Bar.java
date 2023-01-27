@@ -180,7 +180,7 @@ public class SingleDriver4Bar extends LinearOpMode {
                 fingerPos = "Closed";
             }
             else if (gamepad1.right_bumper){
-                clawFinger.setPosition(0.5); //open
+                clawFinger.setPosition(0.4); //openw
                 fingerPos = "Open";
             }
 
