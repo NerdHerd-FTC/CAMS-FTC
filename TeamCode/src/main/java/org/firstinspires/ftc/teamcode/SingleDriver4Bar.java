@@ -47,10 +47,10 @@ public class SingleDriver4Bar extends LinearOpMode {
     static final int  HIGH_JUNCTION_TICKS = -685;
     static final int  MEDIUM_JUNCTION_TICKS = -542;
     static final int  LOW_JUNCTION_TICKS = -400;
-    
-    static final double MACRO_POWER = 0.65; //for quick adjustments
-    static final double ARM_POWER = 0.65; //prevent rogue negatives
-    static final int ARM_SPEED_MANUAL = 10;
+
+    static final double MACRO_POWER = 0.4; //for quick adjustments
+    static final double ARM_POWER = 0.7; //prevent rogue negatives
+    static final int ARM_SPEED_MANUAL = 15;
     private ElapsedTime runtime = new ElapsedTime();
 
     @Override
@@ -79,6 +79,9 @@ public class SingleDriver4Bar extends LinearOpMode {
 
         RV4BMotor1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         RV4BMotor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        RV4BMotor1.setTargetPosition(0);
+        RV4BMotor2.setTargetPosition(0);
 
         RV4BMotor1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         RV4BMotor2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -124,14 +127,6 @@ public class SingleDriver4Bar extends LinearOpMode {
                 xStorage = false;
             }
 
-            //set power to zero when motors are off
-            if (!RV4BMotor1.isBusy() && !RV4BMotor2.isBusy()) {
-                RV4BMotor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                RV4BMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                RV4BMotor1.setPower(0);
-                RV4BMotor2.setPower(0);
-            }
-
             //Macros!
             if (gamepad1.y) { //go to high
                 RV4BMotor1.setTargetPosition(HIGH_JUNCTION_TICKS);
@@ -142,14 +137,14 @@ public class SingleDriver4Bar extends LinearOpMode {
             }
             else if (gamepad1.b) { //go to medium
                 RV4BMotor1.setTargetPosition(MEDIUM_JUNCTION_TICKS);
-                RV4BMotor2.setTargetPosition(LOW_JUNCTION_TICKS);
+                RV4BMotor2.setTargetPosition(MEDIUM_JUNCTION_TICKS);
 
                 RV4BMotor1.setPower(MACRO_POWER);
                 RV4BMotor2.setPower(MACRO_POWER);
             }
             else if (gamepad1.x) { //go to low
-                RV4BMotor1.setTargetPosition(0);
-                RV4BMotor2.setTargetPosition(0);
+                RV4BMotor1.setTargetPosition(LOW_JUNCTION_TICKS);
+                RV4BMotor2.setTargetPosition(LOW_JUNCTION_TICKS);
 
                 RV4BMotor1.setPower(MACRO_POWER);
                 RV4BMotor2.setPower(MACRO_POWER);
@@ -157,22 +152,22 @@ public class SingleDriver4Bar extends LinearOpMode {
             else if (gamepad1.a) { //go to ground
                 RV4BMotor1.setTargetPosition(0);
                 RV4BMotor2.setTargetPosition(0);
-                
+
                 RV4BMotor1.setPower(MACRO_POWER);
                 RV4BMotor2.setPower(MACRO_POWER);
             }
 
-            if (gamepad1.left_trigger >= 0.4){ //go down manually
+            if (gamepad1.left_trigger >= 0.4 && RV4BMotor1.getCurrentPosition() < 0 && RV4BMotor2.getCurrentPosition() < 0){ //go down manually
                 RV4BMotor1.setTargetPosition(RV4BMotor1.getCurrentPosition() + ARM_SPEED_MANUAL);
                 RV4BMotor2.setTargetPosition(RV4BMotor2.getCurrentPosition() + ARM_SPEED_MANUAL);
-                
+
                 RV4BMotor1.setPower(ARM_POWER);
                 RV4BMotor2.setPower(ARM_POWER);
             }
-            else if (gamepad1.right_trigger >= 0.4){ //go up manually
+            else if (gamepad1.right_trigger >= 0.4 && RV4BMotor1.getCurrentPosition() > -690 && RV4BMotor2.getCurrentPosition() > -690){ //go up manually
                 RV4BMotor1.setTargetPosition(RV4BMotor1.getCurrentPosition() - ARM_SPEED_MANUAL);
                 RV4BMotor2.setTargetPosition(RV4BMotor2.getCurrentPosition() - ARM_SPEED_MANUAL);
-                
+
                 RV4BMotor1.setPower(ARM_POWER);
                 RV4BMotor2.setPower(ARM_POWER);
             }
@@ -181,7 +176,7 @@ public class SingleDriver4Bar extends LinearOpMode {
             int diffTarget = RV4BMotor1.getTargetPosition() - RV4BMotor2.getTargetPosition();
             RV4BMotor1.setTargetPosition(RV4BMotor1.getTargetPosition() - diffTarget/2);
             RV4BMotor2.setTargetPosition(RV4BMotor2.getTargetPosition() + diffTarget/2);
-            
+
             //If the values are slanting, adjust for it!
             int diff = RV4BMotor1.getCurrentPosition() - RV4BMotor2.getCurrentPosition();
             if (RV4BMotor1.getTargetPosition() > RV4BMotor1.getCurrentPosition()) { //If we're trying to increase...
@@ -192,7 +187,7 @@ public class SingleDriver4Bar extends LinearOpMode {
                 RV4BMotor1.setPower(RV4BMotor1.getPower() * (1 + diff / ARM_SPEED_MANUAL));
                 RV4BMotor2.setPower(RV4BMotor1.getPower() * (1 - diff / ARM_SPEED_MANUAL));
             }
-            
+
             //Handle claw open and close
             if (gamepad1.left_bumper){
                 clawFinger.setPosition(0.1); //close
@@ -223,6 +218,8 @@ public class SingleDriver4Bar extends LinearOpMode {
             telemetry.addData("RV4B Power B", "%.2f", RV4BMotor2.getPower());
             telemetry.addData("RV4B Motor A Encoder", RV4BMotor1.getCurrentPosition());
             telemetry.addData("RV4B Motor B Encoder", RV4BMotor2.getCurrentPosition());
+            telemetry.addData("RV4B Motor A Encoder Target", RV4BMotor1.getTargetPosition());
+            telemetry.addData("RV4B Motor B Encoder Target", RV4BMotor1.getTargetPosition());
             telemetry.update();
 
             // Pace this loop so jaw action is reasonable speed.
