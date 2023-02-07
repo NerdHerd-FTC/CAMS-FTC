@@ -162,14 +162,14 @@ public class SingleDriver4Bar extends LinearOpMode {
                 RV4BMotor2.setPower(MACRO_POWER);
             }
 
-            if (gamepad1.left_trigger >= 0.4){ //go down manually
+            if (gamepad1.left_trigger >= 0.4 && RV4BMotor1.getCurrentPosition() < 0 && RV4BMotor2.getCurrentPosition() < 0){ //go down manually
                 RV4BMotor1.setTargetPosition(RV4BMotor1.getCurrentPosition() + ARM_SPEED_MANUAL);
                 RV4BMotor2.setTargetPosition(RV4BMotor2.getCurrentPosition() + ARM_SPEED_MANUAL);
                 
                 RV4BMotor1.setPower(ARM_POWER);
                 RV4BMotor2.setPower(ARM_POWER);
             }
-            else if (gamepad1.right_trigger >= 0.4){ //go up manually
+            else if (gamepad1.right_trigger >= 0.4 && RV4BMotor1.getCurrentPosition() > -690 && RV4BMotor2.getCurrentPosition() > -690){ //go up manually
                 RV4BMotor1.setTargetPosition(RV4BMotor1.getCurrentPosition() - ARM_SPEED_MANUAL);
                 RV4BMotor2.setTargetPosition(RV4BMotor2.getCurrentPosition() - ARM_SPEED_MANUAL);
                 
