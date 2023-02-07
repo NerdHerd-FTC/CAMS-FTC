@@ -142,14 +142,14 @@ public class SingleDriver4Bar extends LinearOpMode {
             }
             else if (gamepad1.b) { //go to medium
                 RV4BMotor1.setTargetPosition(MEDIUM_JUNCTION_TICKS);
-                RV4BMotor2.setTargetPosition(LOW_JUNCTION_TICKS);
+                RV4BMotor2.setTargetPosition(MEDIUM_JUNCTION_TICKS);
 
                 RV4BMotor1.setPower(MACRO_POWER);
                 RV4BMotor2.setPower(MACRO_POWER);
             }
             else if (gamepad1.x) { //go to low
-                RV4BMotor1.setTargetPosition(0);
-                RV4BMotor2.setTargetPosition(0);
+                RV4BMotor1.setTargetPosition(LOW_JUNCTION_TICKS);
+                RV4BMotor2.setTargetPosition(LOW_JUNCTION_TICKS);
 
                 RV4BMotor1.setPower(MACRO_POWER);
                 RV4BMotor2.setPower(MACRO_POWER);
@@ -223,6 +223,8 @@ public class SingleDriver4Bar extends LinearOpMode {
             telemetry.addData("RV4B Power B", "%.2f", RV4BMotor2.getPower());
             telemetry.addData("RV4B Motor A Encoder", RV4BMotor1.getCurrentPosition());
             telemetry.addData("RV4B Motor B Encoder", RV4BMotor2.getCurrentPosition());
+            telemetry.addData("RV4B Motor A Encoder Target", RV4BMotor1.getTargetPosition());
+            telemetry.addData("RV4B Motor B Encoder Target", RV4BMotor1.getTargetPosition());
             telemetry.update();
 
             // Pace this loop so jaw action is reasonable speed.
