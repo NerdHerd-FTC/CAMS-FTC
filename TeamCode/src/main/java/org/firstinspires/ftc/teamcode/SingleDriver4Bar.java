@@ -45,7 +45,7 @@ public class SingleDriver4Bar extends LinearOpMode {
     public DcMotor RV4BMotor2 = null;
     public Servo clawFinger = null;
 
-    static final int  TICKS_TO_REACH = 770;
+    static final int  TICKS_TO_REACH = -635;
     static final double MACRO_POWER = Math.abs(0.65); //for quick adjustments
     static final double ARM_POWER = Math.abs(0.65); //prevent rogue negatives
     private ElapsedTime runtime = new ElapsedTime();
