@@ -83,9 +83,6 @@ public class SingleDriver4Bar extends LinearOpMode {
         RV4BMotor1.setTargetPosition(0); 
         RV4BMotor2.setTargetPosition(0);
 
-        RV4BMotor1.setTargetPosition(0);
-        RV4BMotor2.setTargetPosition(0);
-
         RV4BMotor1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         RV4BMotor2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
