@@ -127,14 +127,6 @@ public class SingleDriver4Bar extends LinearOpMode {
                 xStorage = false;
             }
 
-            //set power to zero when motors are off
-            if (!RV4BMotor1.isBusy() && !RV4BMotor2.isBusy()) {
-                RV4BMotor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                RV4BMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                RV4BMotor1.setPower(0);
-                RV4BMotor2.setPower(0);
-            }
-
             //Macros!
             if (gamepad1.y) { //go to high
                 RV4BMotor1.setTargetPosition(HIGH_JUNCTION_TICKS);
