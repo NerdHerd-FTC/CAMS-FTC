@@ -30,8 +30,13 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 /**
  * TelelOp for Double Reverse Virtual 4 Bar with Macro
@@ -214,45 +219,10 @@ public class OLDSingleDriver4Bar extends LinearOpMode {
             left = Math.tanh(left);
             right = Math.tanh(right);
             
-            //90 degree buttons
-            if(gamepad1.dpad_left){
-                degrees = orientation.getYaw(AngleUnit.DEGREES) - 90;
-                turning90 = true;
-            }
-            else if(gamepad1.dpad_right){
-                degrees = orientation.getYaw(AngleUnit.DEGREES) + 90;
-                turning90 = true;
-            }
-            if (turning90){
-                orientation = imu.getRobotYawPitchRollAngles();
-                double prevAngle = currentAngle;
-                currentAngle = orientation.getYaw(AngleUnit.DEGREES);
-                
-                errorTurn = degrees - currentAngle;
 
-                //get most efficient angle (imu has angles from -180 to 180)
-                if (errorTurn > 180) {
-                    errorTurn -= 360;
-                } else if (errorTurn < -180) {
-                    errorTurn += 360;
-                }
-
-                double turnP = K_P_TURN * errorTurn * 5.969; //convert angle to ticks so that the P still applies
-                double turnD = D_MULT_TURN * (currentAngle - prevAngle);
-
-                double powerTurn = Math.tanh(turnP + turnD); //Normalize power to +/- 1.0
-
-                telemetry.addLine("ROTATING");
-
-                // Average left and right with powerTurn to retain normalization
-                leftDrive.setPower ((left - powerTurn) * 0.5 * SPEED_MULT);
-                rightDrive.setPower((right + powerTurn) * 0.5 * SPEED_MULT);
-            }
-            else{
-                // Output the normalized vales to the motor drives.
-                leftDrive.setPower(left * SPEED_MULT);
-                rightDrive.setPower(right * SPEED_MULT);
-            }
+            // Output the normalized vales to the motor drives.
+            leftDrive.setPower(left * SPEED_MULT);
+            rightDrive.setPower(right * SPEED_MULT);
 
             // Send telemetry message to signify robot running;
             telemetry.addData("Speed", speed);

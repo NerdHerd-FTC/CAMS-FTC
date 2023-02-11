@@ -77,14 +77,22 @@ public class BETASingleDriver extends LinearOpMode {
         int prevPos2 = 0;
         double SPEED_MULT = 0.75;
         boolean xStorage = false;
+        double degrees;
+        boolean turning90 = false;
+        double currentAngle;
+        double errorTurn;
 
         //K Variable Bank
         double K_P = 0.0025;
         double K_D = 0.0025;
         double K_ADJ = 0.01;
-        int DELTA_T = 35;
+        int DELTA_T = telemetry.getMsTransmissionInterval();
         double D_MULT = K_D / DELTA_T;
-        double F = 0.1;
+        double F = 0.07;
+
+        final double K_P_TURN = 0.001;
+        final double K_D_TURN = 0.03;
+        final double D_MULT_TURN = K_D_TURN / DELTA_T;
 
         //Telemetry update variables:
         String speed = "Normal";
@@ -138,6 +146,11 @@ public class BETASingleDriver extends LinearOpMode {
             // This way it's also easy to just drive straight, or just turn.
             drive = -gamepad1.left_stick_y;
             turn  =  gamepad1.right_stick_x;
+
+            YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+            AngularVelocity angularVelocity = imu.getRobotAngularVelocity(AngleUnit.DEGREES);
+            currentAngle = orientation.getYaw(AngleUnit.DEGREES);
+            degrees = currentAngle;
 
             //Handle speed multiplication
             if (gamepad1.dpad_up && !xStorage) {
@@ -214,11 +227,11 @@ public class BETASingleDriver extends LinearOpMode {
                 powerPDF1 -= diff * K_ADJ;
                 powerPDF2 += diff * K_ADJ;
 
-                if (Math.abs(powerPDF1) <= 0.1){ //if error is less than 25 ticks, set power to zero
+                if (Math.abs(powerPDF1) <= 0.1 || Math.abs(error1) <= 15){ //if power is less than 0.1 OR error is less than 15, set power to zero
                     powerPDF1 = 0;
                 }
 
-                if (Math.abs(powerPDF2) <= 0.1) { //if error is less than 25 ticks, set power to zero
+                if (Math.abs(powerPDF2) <= 0.1 || Math.abs(error2) <= 15) { //if power is less than 0.1 OR error is less than 15, set power to zero
                     powerPDF2 = 0;
                 }
 
@@ -237,7 +250,6 @@ public class BETASingleDriver extends LinearOpMode {
                 fingerPos = "Closed";
             }
 
-
             //Drive!
             // Combine drive and turn for blended motion.
             left = drive + turn;
@@ -245,9 +257,47 @@ public class BETASingleDriver extends LinearOpMode {
             // Normalize the values so neither exceed +/FinalControlScheme- 1.0
             left = Math.tanh(left);
             right = Math.tanh(right);
-            // Output the safe vales to the motor drives.
-            leftDrive.setPower(left * SPEED_MULT);
-            rightDrive.setPower(right * SPEED_MULT);
+
+
+            //90 degree buttons
+            if(gamepad1.dpad_left){
+                degrees = orientation.getYaw(AngleUnit.DEGREES) - 90;
+                turning90 = true;
+            }
+            else if(gamepad1.dpad_right){
+                degrees = orientation.getYaw(AngleUnit.DEGREES) + 90;
+                turning90 = true;
+            }
+            if (turning90){
+                orientation = imu.getRobotYawPitchRollAngles();
+                double prevAngle = currentAngle;
+                currentAngle = orientation.getYaw(AngleUnit.DEGREES);
+
+                errorTurn = degrees - currentAngle;
+
+                //get most efficient angle (imu has angles from -180 to 180)
+                if (errorTurn > 180) {
+                    errorTurn -= 360;
+                } else if (errorTurn < -180) {
+                    errorTurn += 360;
+                }
+
+                double turnP = K_P_TURN * errorTurn * 5.969; //convert angle to ticks so that the P still applies
+                double turnD = D_MULT_TURN * (currentAngle - prevAngle);
+
+                double powerTurn = Math.tanh(turnP + turnD); //Normalize power to +/- 1.0
+
+                telemetry.addLine("ROTATING");
+
+                // Average left and right with powerTurn to retain normalization
+                leftDrive.setPower ((left - powerTurn) * 0.5 * SPEED_MULT);
+                rightDrive.setPower((right + powerTurn) * 0.5 * SPEED_MULT);
+            }
+            else{
+                // Output the normalized vales to the motor drives.
+                leftDrive.setPower(left * SPEED_MULT);
+                rightDrive.setPower(right * SPEED_MULT);
+            }
 
             // Send telemetry message to signify robot running;
             telemetry.addData("Speed", speed);
@@ -265,8 +315,6 @@ public class BETASingleDriver extends LinearOpMode {
             telemetry.addData("RV4B Error 2", error2);
 
             //IMU Telemetry
-            YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
-            AngularVelocity angularVelocity = imu.getRobotAngularVelocity(AngleUnit.DEGREES);
             telemetry.addData("Yaw (Z)", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.DEGREES));
             telemetry.addData("Yaw (Z) velocity", "%.2f Deg/Sec", angularVelocity.zRotationRate); //rotational location
 
