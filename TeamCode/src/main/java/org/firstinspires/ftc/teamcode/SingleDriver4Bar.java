@@ -26,7 +26,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package org.firstinspires.ftc.teamcode;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -37,18 +36,21 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * TelelOp for Double Reverse Virtual 4 Bar with Macro
  */
 @TeleOp(name= "Single Driver - RV4B", group="Robot")
-@Disabled
-public class PriyanshuRV4BControlScheme extends LinearOpMode {
+public class SingleDriver4Bar extends LinearOpMode {
     /* Declare OpMode members. */
     public DcMotor  leftDrive   = null;
     public DcMotor  rightDrive  = null;
     public DcMotor RV4BMotor1 = null;
     public DcMotor RV4BMotor2 = null;
-    //public Servo clawFinger = null;
+    public Servo clawFinger = null;
 
-    static final int  TICKS_TO_REACH = 770;
-    static final double MACRO_POWER = Math.abs(0.65); //for quick adjustments
-    static final double ARM_POWER = Math.abs(0.65); //prevent rogue negatives
+    static final int  HIGH_JUNCTION_TICKS = -685;
+    static final int  MEDIUM_JUNCTION_TICKS = -542;
+    static final int  LOW_JUNCTION_TICKS = -400;
+
+    static final double MACRO_POWER = 0.4; //for quick adjustments
+    static final double ARM_POWER = 0.7;
+    static final int ARM_SPEED_MANUAL = 15;
     private ElapsedTime runtime = new ElapsedTime();
 
     @Override
@@ -57,7 +59,19 @@ public class PriyanshuRV4BControlScheme extends LinearOpMode {
         double right;
         double drive;
         double turn;
-        double SPEED_MULT = 0.5;
+        double targetPos = 0;
+        int error1 = 0;
+        int error2 = 0;
+        double SPEED_MULT = 0.75;
+        boolean xStorage = false;
+
+        //K Variable Bank
+        double K_P = 0.03;
+        double K_D = 0.03;
+        double K_ADJ = 0.03;
+        int DELTA_T = 35;
+        double D_MULT = K_D / DELTA_T;
+        double F = 0.1;
 
         //Telemetry update variables:
         String speed = "Normal";
@@ -68,7 +82,7 @@ public class PriyanshuRV4BControlScheme extends LinearOpMode {
         rightDrive = hardwareMap.get(DcMotor.class, "MotorB");
         RV4BMotor1 = hardwareMap.get(DcMotor.class, "MotorC");
         RV4BMotor2 = hardwareMap.get(DcMotor.class, "MotorD");
-        //clawFinger = hardwareMap.get(Servo.class, "ServoFinger");
+        clawFinger = hardwareMap.get(Servo.class, "ServoFinger");
 
         //core hex motors are facing opposite each other and will rotate in opposite directions
         RV4BMotor1.setDirection(DcMotor.Direction.FORWARD);
@@ -83,7 +97,6 @@ public class PriyanshuRV4BControlScheme extends LinearOpMode {
         RV4BMotor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         RV4BMotor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        //clawFinger = hardwareMap.get(Servo.class, "ServoFinger");
 
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
@@ -100,110 +113,115 @@ public class PriyanshuRV4BControlScheme extends LinearOpMode {
         waitForStart();
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
-            // Run wheels in POV mode
+            // Run wheels in POV mode (note: The joystick goes negative when pushed forward, so negate it)
             // In this mode the Left stick moves the robot fwd and back, the Right stick turns left and right.
             // This way it's also easy to just drive straight, or just turn.
-            drive = gamepad1.left_stick_y + gamepad1.right_stick_y;
-            turn = gamepad1.right_stick_x + gamepad1.left_stick_x;
+            drive = gamepad1.left_stick_y;
+            turn  =  gamepad1.right_stick_x;
 
             //Handle speed multiplication
-            if (gamepad1.b) {
-                SPEED_MULT = 1;
-                speed = "Fast";
-            }
-            else if (gamepad1.y){
-                SPEED_MULT = 0.25;
-                speed = "Slow";
+            if (gamepad1.x && !xStorage) {
+                xStorage = true;
+                if (SPEED_MULT <= 0.35) {
+                    SPEED_MULT = 0.75;
+                    speed = "Normal";
+                }
+                else {
+                    SPEED_MULT = 0.35;
+                    speed = "Slow";
+                }
             }
             else{
-                SPEED_MULT = 0.5;
-                speed = "Normal";
-            }
-            //set power to zero when motors are off
-            if (!RV4BMotor1.isBusy() && !RV4BMotor2.isBusy()) {
-                RV4BMotor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                RV4BMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                RV4BMotor1.setPower(0);
-                RV4BMotor2.setPower(0);
+                xStorage = false;
             }
 
-            //macro
-            if (gamepad1.left_bumper || gamepad1.right_bumper || gamepad1.left_trigger >= 0.4 || gamepad1.right_trigger >= 0.4) { //kill switch!
-                RV4BMotor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                RV4BMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-                RV4BMotor1.setPower(0);
-                RV4BMotor2.setPower(0);
-            } else if (gamepad1.dpad_up) { //go up
-                RV4BMotor1.setTargetPosition(TICKS_TO_REACH);
-                RV4BMotor2.setTargetPosition(TICKS_TO_REACH);
-
-                RV4BMotor1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                RV4BMotor2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-                RV4BMotor1.setPower(MACRO_POWER);
-                RV4BMotor2.setPower(MACRO_POWER);
-            } else if (gamepad1.dpad_down) { //go down
-                RV4BMotor1.setTargetPosition(0);
-                RV4BMotor2.setTargetPosition(0);
-
-                RV4BMotor1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                RV4BMotor2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-                RV4BMotor1.setPower(MACRO_POWER);
-                RV4BMotor2.setPower(MACRO_POWER);
+            //Macros!
+            if (gamepad1.y) { //go to high
+                targetPos = HIGH_JUNCTION_TICKS;
             }
-/** Doesn't use a macro
-            if (gamepad1.left_trigger >= 0.4){ //go down
-                RV4BMotor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                RV4BMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-                RV4BMotor1.setPower(-ARM_POWER);
-                RV4BMotor2.setPower(-ARM_POWER);
+            else if (gamepad1.b) { //go to medium
+                targetPos = MEDIUM_JUNCTION_TICKS;
             }
-            else if (gamepad1.right_trigger >= 0.4){ //go up
-                RV4BMotor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                RV4BMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-                RV4BMotor1.setPower(ARM_POWER);
-                RV4BMotor2.setPower(ARM_POWER);
-            } else if (RV4BMotor1.getMode() == DcMotor.RunMode.RUN_USING_ENCODER && RV4BMotor2.getMode() == DcMotor.RunMode.RUN_USING_ENCODER) { //stop if there's no macro involved & if there are no trigger action
-                RV4BMotor1.setPower(0);
-                RV4BMotor2.setPower(0);
+            else if (gamepad1.x) { //go to low
+                targetPos = LOW_JUNCTION_TICKS;
             }
- */
+            else if (gamepad1.a) { //go to ground
+                targetPos = 0;
+            }
+
+            if (gamepad1.left_trigger >= 0.4 && RV4BMotor1.getCurrentPosition() < 0 && RV4BMotor2.getCurrentPosition() < 0){ //go down manually
+                targetPos += ARM_SPEED_MANUAL;
+            }
+            else if (gamepad1.right_trigger >= 0.4 && RV4BMotor1.getCurrentPosition() > -690 && RV4BMotor2.getCurrentPosition() > -690){ //go up manually
+                targetPos -= ARM_SPEED_MANUAL;
+            }
+
+            //Base PID
+            int prevError1 = error1;
+            error1 = RV4BMotor1.getCurrentPosition();
+            double P1 = K_P * error1;
+            double D1 = D_MULT * (error1 - prevError1);
+            double powerPDF1 = MACRO_POWER * (P1 + D1);
+            if (350 < RV4BMotor1.getCurrentPosition() && RV4BMotor1.getCurrentPosition() < 550){
+                powerPDF1 -= F;
+            }
+
+            int prevError2 = error2;
+            error2 = RV4BMotor1.getCurrentPosition();
+            double P2 = K_P * error2;
+            double D2 = D_MULT * (error2 - prevError2);
+            double powerPDF2 = MACRO_POWER * (P2 + D2);
+            if (350 < RV4BMotor1.getCurrentPosition() && RV4BMotor1.getCurrentPosition() < 550){
+                powerPDF2 -= F;
+            }
+
+            //If the values are slanting, adjust for it!
+            int diff = RV4BMotor1.getCurrentPosition() - RV4BMotor2.getCurrentPosition();
+            powerPDF1 -= diff * K_ADJ;
+            powerPDF2 += diff * K_ADJ;
+
+            //Final RV4B Motor Powers
+            RV4BMotor1.setPower(Math.tanh(powerPDF1));
+            RV4BMotor2.setPower(Math.tanh(powerPDF2));
 
             //Handle claw open and close
-            if (gamepad1.x){
-                //clawFinger.setPosition(0.2); //close
+            if (gamepad1.left_bumper){
+                clawFinger.setPosition(0.1); //close
                 fingerPos = "Closed";
             }
-            else if (gamepad1.a){
-                //clawFinger.setPosition(0.5); //open
+            else if (gamepad1.right_bumper){
+                clawFinger.setPosition(0.4); //open
                 fingerPos = "Open";
             }
+
 
             //Drive!
             // Combine drive and turn for blended motion.
             left = drive + turn;
             right = drive - turn;
-            // Output the safe vales to the motor drives. (Use tanh to normalize the values so neither exceeds +/-1 bb)
-            leftDrive.setPower(Math.tanh(SPEED_MULT * left));
-            rightDrive.setPower(Math.tanh(SPEED_MULT * right));
+            // Normalize the values so neither exceed +/FinalControlScheme- 1.0
+            left = Math.tanh(left);
+            right = Math.tanh(right);
+            // Output the safe vales to the motor drives.
+            leftDrive.setPower(left * SPEED_MULT);
+            rightDrive.setPower(right * SPEED_MULT);
 
             // Send telemetry message to signify robot running;
-            telemetry.addData("Speed", "String", speed);
+            telemetry.addData("Speed", speed);
             telemetry.addData("Stick X",  "%.2f", turn);
             telemetry.addData("Stick Y", "%.2f", (drive * -1));
-            //telemetry.addData("Claw: ", fingerPos);
+            telemetry.addData("Claw", fingerPos);
             telemetry.addData("RV4B Power A", "%.2f", RV4BMotor1.getPower());
             telemetry.addData("RV4B Power B", "%.2f", RV4BMotor2.getPower());
             telemetry.addData("RV4B Motor A Encoder", RV4BMotor1.getCurrentPosition());
             telemetry.addData("RV4B Motor B Encoder", RV4BMotor2.getCurrentPosition());
+            telemetry.addData("RV4B Target", targetPos);
+            telemetry.addData("PDF Power 1", powerPDF1);
+            telemetry.addData("PDF Power 2", powerPDF2);
             telemetry.update();
 
             // Pace this loop so jaw action is reasonable speed.
-            sleep(50);
+            sleep(DELTA_T);
         }
     }
 }
