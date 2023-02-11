@@ -34,6 +34,10 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+
 /**
  * TelelOp for Double Reverse Virtual 4 Bar with Macro
  */
@@ -46,9 +50,9 @@ public class BETASingleDriver extends LinearOpMode {
     public DcMotor RV4BMotor2 = null;
     public Servo clawFinger = null;
 
-    static final int  HIGH_JUNCTION_TICKS = -690;
-    static final int  MEDIUM_JUNCTION_TICKS = -420;
-    static final int  LOW_JUNCTION_TICKS = -290;
+    static final int  HIGH_JUNCTION_TICKS = 690;
+    static final int  MEDIUM_JUNCTION_TICKS = 420;
+    static final int  LOW_JUNCTION_TICKS = 290;
 
     static final double MACRO_POWER = 0.6; //for quick adjustments
     static final int ARM_SPEED_MANUAL = 10;
@@ -69,6 +73,8 @@ public class BETASingleDriver extends LinearOpMode {
         int targetPos = 0;
         int error1 = 0;
         int error2 = 0;
+        int prevPos1 = 0;
+        int prevPos2 = 0;
         double SPEED_MULT = 0.75;
         boolean xStorage = false;
 
@@ -83,6 +89,7 @@ public class BETASingleDriver extends LinearOpMode {
         //Telemetry update variables:
         String speed = "Normal";
         String fingerPos = "Closed";
+        boolean manualControl = false;
 
         // Define and Initialize Motors and Servos
         leftDrive  = hardwareMap.get(DcMotor.class, "MotorA");
@@ -90,6 +97,7 @@ public class BETASingleDriver extends LinearOpMode {
         RV4BMotor1 = hardwareMap.get(DcMotor.class, "MotorC");
         RV4BMotor2 = hardwareMap.get(DcMotor.class, "MotorD");
         clawFinger = hardwareMap.get(Servo.class, "ServoFinger");
+        imu = hardwareMap.get(IMU.class, "imu");
 
         //core hex motors are facing opposite each other and will rotate in opposite directions
         RV4BMotor1.setDirection(DcMotor.Direction.FORWARD);
@@ -128,7 +136,7 @@ public class BETASingleDriver extends LinearOpMode {
             // Run wheels in POV mode (note: The joystick goes negative when pushed forward, so negate it)
             // In this mode the Left stick moves the robot fwd and back, the Right stick turns left and right.
             // This way it's also easy to just drive straight, or just turn.
-            drive = gamepad1.left_stick_y;
+            drive = -gamepad1.left_stick_y;
             turn  =  gamepad1.right_stick_x;
 
             //Handle speed multiplication
@@ -161,49 +169,72 @@ public class BETASingleDriver extends LinearOpMode {
                 targetPos = 0;
             }
 
-            if (gamepad1.left_trigger >= 0.4 && RV4BMotor1.getCurrentPosition() < 0 && RV4BMotor2.getCurrentPosition() < 0){ //go down manually
-                targetPos += ARM_SPEED_MANUAL;
+            if (gamepad1.left_trigger >= 0.4 && RV4BMotor1.getCurrentPosition() > 0 && RV4BMotor2.getCurrentPosition() > 0){ //go down manually
+                manualControl = true;
+                targetPos = (RV4BMotor1.getCurrentPosition() + RV4BMotor2.getCurrentPosition())/2;
+                RV4BMotor1.setPower(-MACRO_POWER);
+                RV4BMotor2.setPower(-MACRO_POWER);
             }
-            else if (gamepad1.right_trigger >= 0.4 && RV4BMotor1.getCurrentPosition() > -690 && RV4BMotor2.getCurrentPosition() > -690){ //go up manually
-                targetPos -= ARM_SPEED_MANUAL;
+            else if (gamepad1.right_trigger >= 0.4 && RV4BMotor1.getCurrentPosition() < 690 && RV4BMotor2.getCurrentPosition() < 690){ //go up manually
+                manualControl = true;
+                targetPos = (RV4BMotor1.getCurrentPosition() + RV4BMotor2.getCurrentPosition())/2;
+                RV4BMotor1.setPower(MACRO_POWER);
+                RV4BMotor2.setPower(MACRO_POWER);
+            } else {
+                manualControl = false;
             }
+
+            double powerPDF1 = 0;
+            double powerPDF2 = 0;
 
             //Base PID
-            int prevError1 = error1;
-            error1 = targetPos - RV4BMotor1.getCurrentPosition();
-            double P1 = K_P * error1;
-            double D1 = D_MULT * (error1 - prevError1);
-            double powerPDF1 = MACRO_POWER * (P1 + D1);
-            if (350 < RV4BMotor1.getCurrentPosition() && RV4BMotor1.getCurrentPosition() < 550){
-                powerPDF1 -= F;
+            if (!manualControl) {
+                error1 = targetPos - RV4BMotor1.getCurrentPosition();
+                double P1 = K_P * error1;
+                double D1 = D_MULT * (prevPos1 - RV4BMotor1.getCurrentPosition());
+                powerPDF1 = MACRO_POWER * (P1 + D1);
+                prevPos1 = RV4BMotor1.getCurrentPosition();
+
+                if (350 < RV4BMotor1.getCurrentPosition() && RV4BMotor1.getCurrentPosition() < 550) {
+                    powerPDF1 -= F;
+                }
+
+                error2 = targetPos - RV4BMotor2.getCurrentPosition();
+                double P2 = K_P * error2;
+                double D2 = D_MULT * (prevPos2 - RV4BMotor2.getCurrentPosition());
+                powerPDF2 = MACRO_POWER * (P2 + D2);
+                prevPos2 = RV4BMotor2.getCurrentPosition();
+
+                if (350 < RV4BMotor2.getCurrentPosition() && RV4BMotor2.getCurrentPosition() < 550) {
+                    powerPDF2 -= F;
+                }
+
+                //If the values are slanting, adjust for it!
+                int diff = RV4BMotor1.getCurrentPosition() - RV4BMotor2.getCurrentPosition();
+                powerPDF1 -= diff * K_ADJ;
+                powerPDF2 += diff * K_ADJ;
+
+                if (Math.abs(powerPDF1) <= 0.1){ //if error is less than 25 ticks, set power to zero
+                    powerPDF1 = 0;
+                }
+
+                if (Math.abs(powerPDF2) <= 0.1) { //if error is less than 25 ticks, set power to zero
+                    powerPDF2 = 0;
+                }
+
+                //Final RV4B Motor Powers
+                RV4BMotor1.setPower(Math.tanh(powerPDF1));
+                RV4BMotor2.setPower(Math.tanh(powerPDF2));
             }
-
-            int prevError2 = error2;
-            error2 = targetPos - RV4BMotor2.getCurrentPosition();
-            double P2 = K_P * error2;
-            double D2 = D_MULT * (error2 - prevError2);
-            double powerPDF2 = MACRO_POWER * (P2 + D2);
-            if (350 < RV4BMotor2.getCurrentPosition() && RV4BMotor2.getCurrentPosition() < 550){
-                powerPDF2 -= F;
-            }
-
-            //If the values are slanting, adjust for it!
-            int diff = RV4BMotor1.getCurrentPosition() - RV4BMotor2.getCurrentPosition();
-            powerPDF1 -= diff * K_ADJ;
-            powerPDF2 += diff * K_ADJ;
-
-            //Final RV4B Motor Powers
-            RV4BMotor1.setPower(Math.tanh(powerPDF1));
-            RV4BMotor2.setPower(Math.tanh(powerPDF2));
 
             //Handle claw open and close
-            if (gamepad1.left_bumper){
-                clawFinger.setPosition(0.1); //close
-                fingerPos = "Closed";
-            }
-            else if (gamepad1.right_bumper){
+            if (gamepad1.right_bumper && gamepad1.left_bumper) {
                 clawFinger.setPosition(0.4); //open
                 fingerPos = "Open";
+            }
+            else if (gamepad1.left_bumper || gamepad1.right_bumper){
+                clawFinger.setPosition(0.1); //close
+                fingerPos = "Closed";
             }
 
 
@@ -232,6 +263,13 @@ public class BETASingleDriver extends LinearOpMode {
             telemetry.addData("PDF Power 2", powerPDF2);
             telemetry.addData("RV4B Error 1", error1);
             telemetry.addData("RV4B Error 2", error2);
+
+            //IMU Telemetry
+            YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+            AngularVelocity angularVelocity = imu.getRobotAngularVelocity(AngleUnit.DEGREES);
+            telemetry.addData("Yaw (Z)", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.DEGREES));
+            telemetry.addData("Yaw (Z) velocity", "%.2f Deg/Sec", angularVelocity.zRotationRate); //rotational location
+
             telemetry.update();
 
             // Pace this loop so jaw action is reasonable speed.

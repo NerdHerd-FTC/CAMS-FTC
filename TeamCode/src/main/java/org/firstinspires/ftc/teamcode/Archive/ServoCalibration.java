@@ -25,7 +25,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.Archive;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -37,6 +37,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * TelelOp for Double Reverse Virtual 4 Bar with Macro
  */
 @TeleOp(name= "Servo Calibration", group="Robot")
+@Disabled
 public class ServoCalibration extends LinearOpMode {
     /* Declare OpMode members. */
     public Servo clawFinger = null;
