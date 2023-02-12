@@ -46,7 +46,6 @@ public class IMUTesting extends LinearOpMode {
     /* Declare OpMode members. */
     public DcMotor  leftDrive   = null;
     public DcMotor  rightDrive  = null;
-    public DcMotor Arm = null;
     public Servo clawFinger = null;
     static RevHubOrientationOnRobot.LogoFacingDirection[] logoFacingDirections
             = RevHubOrientationOnRobot.LogoFacingDirection.values();
@@ -67,11 +66,8 @@ public class IMUTesting extends LinearOpMode {
         double turn;
         double SPEED_MULT = 0.5;
 
-        double ArmPower = 0.4;
-
         //Telemetry update variables:
         String speed = "Normal";
-        String fingerPos = "Closed";
 
         //initialize IMU
         imu = hardwareMap.get(IMU.class, "imu");
@@ -80,27 +76,22 @@ public class IMUTesting extends LinearOpMode {
         leftDrive  = hardwareMap.get(DcMotor.class, "MotorA");
         rightDrive = hardwareMap.get(DcMotor.class, "MotorB");
 
-        Arm = hardwareMap.get(DcMotor.class, "MotorC");
-
-        clawFinger = hardwareMap.get(Servo.class, "ServoFinger");
-
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
         // Note: The settings here assume direct drive on left and right wheels.  Gear Reduction or 90 Deg drives may require direction flips
         leftDrive.setDirection(DcMotor.Direction.REVERSE);
         rightDrive.setDirection(DcMotor.Direction.FORWARD);
-        Arm.setDirection(DcMotor.Direction.FORWARD);
 
-        Arm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        IMU.Parameters myIMUparameters;
 
-        Arm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        myIMUparameters = new IMU.Parameters(
+                new RevHubOrientationOnRobot(
+                        RevHubOrientationOnRobot.LogoFacingDirection.UP,
+                        RevHubOrientationOnRobot.UsbFacingDirection.RIGHT
+                )
+        );
 
-        Arm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-        RevHubOrientationOnRobot.LogoFacingDirection logo = logoFacingDirections[0]; //logo facing UP
-        RevHubOrientationOnRobot.UsbFacingDirection usb = usbFacingDirections[4]; //usb ports facing to the LEFT
-        RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logo, usb);
-        imu.initialize(new IMU.Parameters(orientationOnRobot));
+        imu.initialize(myIMUparameters);
 
         runtime.reset();
 
@@ -114,8 +105,8 @@ public class IMUTesting extends LinearOpMode {
             // Run wheels in POV mode (note: The joystick goes negative when pushed forward, so negate it)
             // In this mode the Left stick moves the robot fwd and back, the Right stick turns left and right.
             // This way it's also easy to just drive straight, or just turn.
-            drive = gamepad1.left_stick_y;
-            turn  =  gamepad1.right_stick_x;
+            drive = -gamepad1.left_stick_y;
+            turn  = gamepad1.right_stick_x;
 
             //Handle speed multiplication
             if (gamepad1.x && runtime.seconds() >= 2) {
@@ -128,47 +119,6 @@ public class IMUTesting extends LinearOpMode {
                     SPEED_MULT = 0.25;
                     speed = "Slow";
                 }
-            }
-
-            //set power to zero when motors are off
-            if (!Arm.isBusy()) {
-                Arm.setPower(0);
-                Arm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            }
-
-            //macro
-            if (gamepad1.b) { //kill switch!
-                Arm.setPower(0);
-                Arm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            } else if (gamepad1.y) { //go up
-                Arm.setTargetPosition(TICKS_TO_REACH);
-                Arm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                Arm.setPower(MACRO_POWER);
-            } else if (gamepad1.a) { //go down
-                Arm.setTargetPosition(GROUND); //ground
-                Arm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                Arm.setPower(MACRO_POWER);
-            }
-
-            if (gamepad1.left_trigger >= 0.4){
-                Arm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                Arm.setPower(-ArmPower);
-            }
-            else if (gamepad1.right_trigger >= 0.4){
-                Arm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                Arm.setPower(ArmPower);
-            } else if (Arm.getMode() == DcMotor.RunMode.RUN_USING_ENCODER) { //force it to stop if there's no macro involved & if there is no trigger action
-                Arm.setPower(0);
-            }
-
-            //Handle claw open and close
-            if (gamepad1.left_bumper){
-                clawFinger.setPosition(0.2); //close
-                fingerPos = "Closed";
-            }
-            else if (gamepad1.right_bumper){
-                clawFinger.setPosition(0.5); //open
-                fingerPos = "Open";
             }
 
             //Drive!
@@ -190,9 +140,6 @@ public class IMUTesting extends LinearOpMode {
             telemetry.addData("Speed: ", "String", speed);
             telemetry.addData("Stick X: ",  "%.2f", turn);
             telemetry.addData("Stick Y: ", "%.2f", (drive * -1));
-            telemetry.addData("Claw: ", fingerPos);
-            telemetry.addData("Power: ", "%.2f", Arm.getPower());
-            telemetry.addData("Arm Encoder: %7d", Arm.getCurrentPosition() + "\n\n");
 
             //IMU Telemetry
             YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
