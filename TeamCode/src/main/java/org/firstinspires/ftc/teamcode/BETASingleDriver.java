@@ -51,17 +51,13 @@ public class BETASingleDriver extends LinearOpMode {
     public Servo clawFinger = null;
 
     static final int  HIGH_JUNCTION_TICKS = 690;
-    static final int  MEDIUM_JUNCTION_TICKS = 420;
-    static final int  LOW_JUNCTION_TICKS = 290;
+    static final int  MEDIUM_JUNCTION_TICKS = 500;
+    static final int  LOW_JUNCTION_TICKS = 320;
 
     static final double MACRO_POWER = 0.6; //for quick adjustments
     static final int ARM_SPEED_MANUAL = 10;
     private ElapsedTime runtime = new ElapsedTime();
 
-    static RevHubOrientationOnRobot.LogoFacingDirection[] logoFacingDirections
-            = RevHubOrientationOnRobot.LogoFacingDirection.values();
-    static RevHubOrientationOnRobot.UsbFacingDirection[] usbFacingDirections
-            = RevHubOrientationOnRobot.UsbFacingDirection.values();
     IMU imu;
 
     @Override
@@ -77,9 +73,9 @@ public class BETASingleDriver extends LinearOpMode {
         int prevPos2 = 0;
         double SPEED_MULT = 0.75;
         boolean xStorage = false;
-        double targetDegrees;
+        double targetDegrees = 0;
         boolean turning90 = false;
-        double currentAngle;
+        double currentAngle = 0;
         double errorTurn;
 
         //K Variable Bank
@@ -90,7 +86,7 @@ public class BETASingleDriver extends LinearOpMode {
         double D_MULT = K_D / DELTA_T;
         double F = 0.07;
 
-        final double K_P_TURN = 0.001;
+        final double K_P_TURN = 0.0015; //0.0015
         final double K_D_TURN = 0.03;
         final double D_MULT_TURN = K_D_TURN / telemetry.getMsTransmissionInterval();;
 
@@ -120,7 +116,6 @@ public class BETASingleDriver extends LinearOpMode {
         RV4BMotor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         RV4BMotor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
         // Note: The settings here assume direct drive on left and right wheels.  Gear Reduction or 90 Deg drives may require direction flips
@@ -135,6 +130,7 @@ public class BETASingleDriver extends LinearOpMode {
                 )
         );
         imu.initialize(myIMUparameters);
+        imu.resetYaw();
 
         runtime.reset();
 
@@ -151,10 +147,12 @@ public class BETASingleDriver extends LinearOpMode {
             drive = -gamepad1.left_stick_y;
             turn  =  gamepad1.right_stick_x;
 
+            if (drive  >= 0.05 || turn >= 0.05) {
+                turning90 = false;
+            }
+
             YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
             AngularVelocity angularVelocity = imu.getRobotAngularVelocity(AngleUnit.DEGREES);
-            currentAngle = orientation.getYaw(AngleUnit.DEGREES);
-            targetDegrees = currentAngle;
 
             //Handle speed multiplication
             if (gamepad1.right_stick_button && !xStorage) {
@@ -227,9 +225,9 @@ public class BETASingleDriver extends LinearOpMode {
                 }
 
                 //If the values are slanting, adjust for it!
-                int diff = RV4BMotor1.getCurrentPosition() - RV4BMotor2.getCurrentPosition();
+/*                int diff = RV4BMotor1.getCurrentPosition() - RV4BMotor2.getCurrentPosition();
                 powerPDF1 -= diff * K_ADJ;
-                powerPDF2 += diff * K_ADJ;
+                powerPDF2 += diff * K_ADJ;*/
 
                 if (Math.abs(powerPDF1) <= 0.1 || Math.abs(error1) <= 15){ //if power is less than 0.1 OR error is less than 15, set power to zero
                     powerPDF1 = 0;
@@ -262,14 +260,13 @@ public class BETASingleDriver extends LinearOpMode {
             left = Math.tanh(left);
             right = Math.tanh(right);
 
-
-            //90 degree buttons
+            /*//90 degree buttons
             if(gamepad1.dpad_left){
-                targetDegrees = -90;
+                targetDegrees = 90;
                 turning90 = true;
             }
             else if(gamepad1.dpad_right){
-                targetDegrees = 90;
+                targetDegrees = -90;
                 turning90 = true;
             } else if (gamepad1.dpad_up){
                 targetDegrees = 0;
@@ -280,14 +277,13 @@ public class BETASingleDriver extends LinearOpMode {
             }
 
             if (turning90){
-                orientation = imu.getRobotYawPitchRollAngles();
                 double prevAngle = currentAngle;
                 currentAngle = orientation.getYaw(AngleUnit.DEGREES);
 
                 errorTurn = targetDegrees - currentAngle;
 
                 //get most efficient angle (imu has angles from -180 to 180)
-                if (errorTurn > 180) {
+               if (errorTurn > 180) {
                     errorTurn -= 360;
                 } else if (errorTurn < -180) {
                     errorTurn += 360;
@@ -304,19 +300,30 @@ public class BETASingleDriver extends LinearOpMode {
                 telemetry.addData("Turning power D", turnD);
                 telemetry.addData("Final turning power", powerTurn);
 
-                // Average left and right with powerTurn to retain normalization
-                leftDrive.setPower(Math.tanh((left - powerTurn) * SPEED_MULT));
-                rightDrive.setPower(Math.tanh(right + powerTurn) * SPEED_MULT);
+                leftDrive.setPower(-powerTurn);
+                rightDrive.setPower(powerTurn);
 
-                if (Math.abs(errorTurn) <= 2 && Math.abs(turnD) <= 0.2){
+                *//*if (targetDegrees < currentAngle && Math.abs(errorTurn) > 2) {
+                    leftDrive.setPower(-powerTurn);
+                    rightDrive.setPower(powerTurn);
+                } else if (targetDegrees > currentAngle && Math.abs(errorTurn) > 2) {
+                    leftDrive.setPower(powerTurn);
+                    rightDrive.setPower(-powerTurn);
+                } else {
+                    leftDrive.setPower(0);
+                    rightDrive.setPower(0);
                     turning90 = false;
-                }
+                }*//*
             }
             else{
                 // Output the normalized vales to the motor drives.
                 leftDrive.setPower(left * SPEED_MULT);
                 rightDrive.setPower(right * SPEED_MULT);
-            }
+                turning90 = false;
+            }*/
+
+            leftDrive.setPower(left * SPEED_MULT);
+            rightDrive.setPower(right * SPEED_MULT);
 
             // Send telemetry message to signify robot running;
             telemetry.addData("Speed", speed);

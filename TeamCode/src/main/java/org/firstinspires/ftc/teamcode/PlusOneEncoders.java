@@ -23,36 +23,33 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
-@Autonomous(name="5+1 Right", group="Robot")
-public class FivePlusOneRight extends LinearOpMode {
+@Autonomous(name="+1 Right (Encoders)", group="Robot")
+public class PlusOneEncoders extends LinearOpMode {
     public DcMotor leftDrive = null;
     public DcMotor rightDrive = null;
     public DcMotor RV4BMotor1 = null;
     public DcMotor RV4BMotor2 = null;
     public Servo clawFinger = null;
 
-    IMU imu;
-
     static final double COUNTS_PER_MOTOR_REV = 28;    //UltraPlanetary Gearbox Kit & HD Hex Motor
     static final double DRIVE_GEAR_REDUCTION = 20;   //gear ratio
     static final double WHEEL_DIAMETER_INCH = 3.65;    // For figuring circumference: 90mm
     static final double COUNTS_PER_INCH = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) / (WHEEL_DIAMETER_INCH * Math.PI);
 
-    static final double ARM_POWER = Math.abs(0.65); //for quick adjustments
+    static final double ARM_POWER = 0.65; //for quick adjustments
 
-    static final int lowJunction = 0; //for RV4B
-    static final int highJunction = 380;
-    static final int groundJunction = 0;
+    static final int HIGH_JUNCTION_TICKS = 690;
+    static final int MEDIUM_JUNCTION_TICKS = 420;
+    static final int LOW_JUNCTION_TICKS = 290;
+
     int coneStack = 0; //know how high to reach to get the next cone
 
     static final double clawOpen = 0.5;
@@ -98,53 +95,41 @@ public class FivePlusOneRight extends LinearOpMode {
 
         telemetry.setMsTransmissionInterval(20);
 
-        //initialize & setup IMU
-        imu = hardwareMap.get(IMU.class, "imu");
-        IMU.Parameters myIMUparameters;
-        myIMUparameters = new IMU.Parameters(
-                new RevHubOrientationOnRobot(
-                        RevHubOrientationOnRobot.LogoFacingDirection.UP,
-                        RevHubOrientationOnRobot.UsbFacingDirection.RIGHT
-                )
-        );
-        imu.initialize(myIMUparameters);
-        imu.resetYaw();
-
-        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
-        telemetry.addData("Yaw", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.DEGREES));
-
         waitForStart();
-        orientation = imu.getRobotYawPitchRollAngles();
-        final double startingAngle = orientation.getYaw(AngleUnit.DEGREES);
-        //i can nearly guarantee this won't work but it's a starting point
-        //ideal objective is to score 42 pts: 1 on high junction (5 points), 4 on low junction (12 points), 1 on ground junction (5 points - 2 points from scoring and 3 points for ownership), plus park (20 points)
-        //forwardPID(-50.125, startingAngle); //move forward to high junction
-        turnIMU(45); //turn to high junction
-        //lift arm & score con
-        turnIMU(-90); //turn to cone stack
-        turnIMU(120);
-        turnIMU(0);
-        turnIMU(-45);
-        turnIMU(-180);
-        turnIMU(179);
-        //forwardPID(-27.625, -90); //move to cone stack
-        //cone pick up here & start to lift up arm
-        //turnIMU(45); //turn to ground junction
-        //forwardPID(-26.5, 45); //move to ground junction
-        //lower arm --> score --> move arm up (need to take measurements)
-        //turnIMU(-135); //turn back to cone stack
-        //forwardPID(-26.5, -135);
-        //for (int i=0; i<4; i++) { //loop 4 times for 4 cones left in stack
-            //pick up cone
-        //turnIMU(135);
-        //forwardPID(-26.5, 135);
-            //raise arm to low junction & score
-        //turnIMU(-45); //turn back to cone stack
-        //forwardPID(-26.5, -45);
+
+        //start
+        clawFinger.setPosition(clawClose);
+
+        //move forward to high junction
+        forwardPID(50.125);
+
+        armControl(HIGH_JUNCTION_TICKS);
+
+        //turn to high junction
+        turn(45);
+
+        forwardPID(5);
+
+        //wait until arm is at height
+        while (RV4BMotor1.isBusy() && RV4BMotor2.isBusy()) {
+
         }
+        RV4BMotor1.setPower(0);
+        RV4BMotor2.setPower(0);
 
+        //open claw
+        clawFinger.setPosition(clawOpen);
+        sleep(1000);
+        clawFinger.setPosition(clawClose);
 
-    private void forwardPID(double targetInches, double startingAngle) {
+        //straighten
+        forwardPID(-5);
+
+        armControl(0);
+        turn(-45);
+    }
+
+    private void forwardPID(double targetInches) {
         int location = leftDrive.getCurrentPosition();
         final int target = (int) (COUNTS_PER_INCH * targetInches) + location; //in encoder ticks
         double error = (target - location);
@@ -156,7 +141,7 @@ public class FivePlusOneRight extends LinearOpMode {
 
         final double D_MULT_MOVE = K_D_MOVE / DELTA_T;
 
-        while (opModeIsActive()) {
+        while (opModeIsActive() && Math.abs(error) >= 15) {
             location = leftDrive.getCurrentPosition();
             double prevError = error;
             error = (target - location);
@@ -167,110 +152,102 @@ public class FivePlusOneRight extends LinearOpMode {
             //Set power using PID
             double drivePower = P + D; //cap power at += 1
 
-            YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
-            orientation = imu.getRobotYawPitchRollAngles();
-            double currentAngle = orientation.getYaw(AngleUnit.DEGREES);
-
-            double turnError = startingAngle - currentAngle;
-
-            // Normalize the error to be within +/- 180 degrees
-            if (turnError > 180) {
-                turnError -= 360;
-            } else if (turnError < -180) {
-                turnError += 360;
-            }
-
-            // Get angle error
-            double correction = K_P_MOVE * turnError * 5.969; //convert degree to ticks
-
-            double leftPower  = Math.tanh(drivePower - correction); //normalize power to between +- 1
-            double rightPower = Math.tanh(drivePower + correction); //normalize power to between +- 1
+            double leftPower = Math.tanh(drivePower); //normalize power to between +- 1
+            double rightPower = Math.tanh(drivePower); //normalize power to between +- 1
 
             leftDrive.setPower(leftPower);
             rightDrive.setPower(rightPower);
+
+            //set RV4B power to zero when motors are off - may be a redundancy
+            if (!RV4BMotor1.isBusy() && !RV4BMotor2.isBusy()) {
+                RV4BMotor1.setPower(0);
+                RV4BMotor2.setPower(0);
+            }
 
             telemetry.addData("Location: ", leftDrive.getCurrentPosition());
             telemetry.addData("Target: ", target);
             telemetry.addData("Error Number: ", error);
             telemetry.addData("Raw Drive Power: ", drivePower);
-            telemetry.addData("Raw Turn Power: ", correction);
             telemetry.addData("Left Power: ", leftPower);
             telemetry.addData("Right Power: ", rightPower);
             telemetry.addData("Target Inch: ", targetInches);
-            telemetry.addData("Starting Angle: ", startingAngle);
-            telemetry.addData("Error: ", turnError);
-            telemetry.addData("Yaw", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.DEGREES));
             telemetry.update();
-
-            if (Math.abs(error) <= 15) {
-                leftDrive.setPower(0);
-                rightDrive.setPower(0);
-                telemetry.update();
-                break;
-            }
 
             sleep(DELTA_T);
         }
     }
 
-    private void turnIMU(double degrees) {
+
+    //utilizes 180 to -180
+    //right - negative
+    //left - positive
+    private void turn(double degrees) {
+        //11 inch = 90 deg.
+        //11/90 deg = 1 deg.
+        final double TICKS_PER_DEGREE = 11.0 / 90 * COUNTS_PER_INCH;
+        final double DEGREES_PER_TICK = 90.0/(11*COUNTS_PER_INCH);
+        double target = TICKS_PER_DEGREE * degrees;
+        double error = target;
+
         //K constants
-        final double K_P_TURN = 0.001;
-        final double K_D_TURN = 0.03;
+        final double K_P_TURN = 0.0015 * 5.969 * DEGREES_PER_TICK;
+        final double K_D_TURN = 0.03 * DEGREES_PER_TICK;
         final long DELTA_T = 20 + (long) telemetry.getMsTransmissionInterval();
 
         final double D_MULT_TURN = K_D_TURN / DELTA_T;
 
-        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
-        double currentAngle = orientation.getYaw(AngleUnit.DEGREES);
-
-        double error = degrees - currentAngle;
-        //get most efficient angle (imu has angles from -180 to 180)
-        if (error > 180) {
-            error -= 360;
-        } else if (error < -180) {
-            error += 360;
-        }
-
-        while (opModeIsActive() && Math.abs(error) > 2) {
-            orientation = imu.getRobotYawPitchRollAngles();
-            currentAngle = orientation.getYaw(AngleUnit.DEGREES);
-
+        while (opModeIsActive() && Math.abs(error) >= 15) {
+            double location = leftDrive.getCurrentPosition();
             double prevError = error;
-            error = degrees - currentAngle;
+            error = (target - location);
+            //P
+            double P = K_P_TURN * error;
+            //D
+            double D = D_MULT_TURN * (error - prevError);
+            //Set power using PID
+            double drivePower = P + D; //cap power at += 1
 
-            //get most efficient angle (imu has angles from -180 to 180)
-            if (error > 180) {
-                error -= 360;
-            } else if (error < -180) {
-                error += 360;
+            double leftPower = Math.tanh(drivePower); //normalize power to between +- 1
+            double rightPower = Math.tanh(drivePower); //normalize power to between +- 1
+
+            leftDrive.setPower(leftPower);
+            rightDrive.setPower(rightPower);
+
+            //set RV4B power to zero when motors are off - may be a redundancy
+            if (!RV4BMotor1.isBusy() && !RV4BMotor2.isBusy()) {
+                RV4BMotor1.setPower(0);
+                RV4BMotor2.setPower(0);
             }
 
-            double P = K_P_TURN * error * 5.969;
-            double D = D_MULT_TURN * (prevError - error);
-
-            double power = Math.tanh(P + D); //convert angle to ticks so that the P still applies
-            leftDrive.setPower(-power);
-            rightDrive.setPower(power);
-
-            telemetry.addLine("ROTATING");
-            telemetry.addData("Target", degrees);
-            telemetry.addData("Error", error);
-            telemetry.addData("Power", power);
-            telemetry.addData("Yaw", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.DEGREES));
+            telemetry.addData("Location: ", leftDrive.getCurrentPosition());
+            telemetry.addData("Target: ", target);
+            telemetry.addData("Error Number: ", error);
+            telemetry.addData("Raw Drive Power: ", drivePower);
+            telemetry.addData("Left Power: ", leftPower);
+            telemetry.addData("Right Power: ", rightPower);
             telemetry.update();
-            sleep(20);
+
+            sleep(DELTA_T);
         }
+
+        //set RV4B power to zero when motors are off - may be a redundancy
+        if (!RV4BMotor1.isBusy() && !RV4BMotor2.isBusy()) {
+            RV4BMotor1.setPower(0);
+            RV4BMotor2.setPower(0);
+        }
+        sleep(20);
     }
 
     private void armControl(int loc) {
-        RV4BMotor1.setTargetPosition(loc);
-        RV4BMotor2.setTargetPosition(loc);
+        if (opModeIsActive()) {
+            RV4BMotor1.setTargetPosition(loc);
+            RV4BMotor2.setTargetPosition(loc);
 
-        RV4BMotor1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        RV4BMotor2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            RV4BMotor1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            RV4BMotor2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-        RV4BMotor1.setPower(ARM_POWER);
-        RV4BMotor2.setPower(ARM_POWER);
+            RV4BMotor1.setPower(ARM_POWER);
+            RV4BMotor2.setPower(ARM_POWER);
+        }
     }
 }

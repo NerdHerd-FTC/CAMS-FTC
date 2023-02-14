@@ -23,6 +23,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.IMU;
@@ -32,7 +33,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 @Autonomous(name="+1 Right", group="Robot")
-public class PlusOne extends LinearOpMode {
+@Disabled
+public class PlusOneIMU extends LinearOpMode {
     public DcMotor leftDrive = null;
     public DcMotor rightDrive = null;
     public DcMotor RV4BMotor1 = null;
@@ -50,11 +52,12 @@ public class PlusOne extends LinearOpMode {
     static final double WHEEL_DIAMETER_INCH = 3.65;    // For figuring circumference: 90mm
     static final double COUNTS_PER_INCH = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) / (WHEEL_DIAMETER_INCH * Math.PI);
 
-    static final double ARM_POWER = Math.abs(0.65); //for quick adjustments
+    static final double ARM_POWER = 0.65; //for quick adjustments
 
-    static final int lowJunction = 0; //for RV4B
-    static final int highJunction = 380;
-    static final int groundJunction = 0;
+    static final int  HIGH_JUNCTION_TICKS = 690;
+    static final int  MEDIUM_JUNCTION_TICKS = 420;
+    static final int  LOW_JUNCTION_TICKS = 290;
+
     int coneStack = 0; //know how high to reach to get the next cone
 
     static final double clawOpen = 0.5;
@@ -121,9 +124,6 @@ public class PlusOne extends LinearOpMode {
 
         //move forward to high junction
         forwardPID(-50.125, startingAngle);
-
-        //raise arm (async, in a sense)
-        armControl(highJunction);
 
         //turn to high junction
         turnIMU(45);
