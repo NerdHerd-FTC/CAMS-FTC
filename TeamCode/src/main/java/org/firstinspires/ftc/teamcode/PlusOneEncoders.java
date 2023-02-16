@@ -98,6 +98,7 @@ public class PlusOneEncoders extends LinearOpMode {
         waitForStart();
 
         //start
+        clawFinger.setPosition(clawOpen);
         clawFinger.setPosition(clawClose);
 
         //move forward to high junction
@@ -133,7 +134,7 @@ public class PlusOneEncoders extends LinearOpMode {
         int location = leftDrive.getCurrentPosition();
         final int target = (int) (COUNTS_PER_INCH * targetInches) + location; //in encoder ticks
         double error = (target - location);
-        final long DELTA_T = 20 + (long) telemetry.getMsTransmissionInterval();
+        final int DELTA_T = 35;
 
         //K constants
         final double K_P_MOVE = 0.0008;
@@ -192,7 +193,7 @@ public class PlusOneEncoders extends LinearOpMode {
         //K constants
         final double K_P_TURN = 0.0015 * 5.969 * DEGREES_PER_TICK;
         final double K_D_TURN = 0.03 * DEGREES_PER_TICK;
-        final long DELTA_T = 20 + (long) telemetry.getMsTransmissionInterval();
+        final int DELTA_T = 35;
 
         final double D_MULT_TURN = K_D_TURN / DELTA_T;
 
@@ -207,7 +208,7 @@ public class PlusOneEncoders extends LinearOpMode {
             //Set power using PID
             double drivePower = P + D; //cap power at += 1
 
-            double leftPower = Math.tanh(drivePower); //normalize power to between +- 1
+            double leftPower = Math.tanh(-drivePower); //normalize power to between +- 1
             double rightPower = Math.tanh(drivePower); //normalize power to between +- 1
 
             leftDrive.setPower(leftPower);

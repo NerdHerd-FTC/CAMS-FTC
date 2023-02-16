@@ -71,6 +71,7 @@ public class BETASingleDriver extends LinearOpMode {
         int error2 = 0;
         int prevPos1 = 0;
         int prevPos2 = 0;
+        double threshold = 0.125;
         double SPEED_MULT = 0.75;
         boolean xStorage = false;
         double targetDegrees = 0;
@@ -182,6 +183,7 @@ public class BETASingleDriver extends LinearOpMode {
             }
             else if (gamepad1.a) { //go to ground
                 targetPos = 0;
+                clawFinger.setPosition(0.1);
             }
 
             if (gamepad1.left_trigger >= 0.4 && RV4BMotor1.getCurrentPosition() > 0 && RV4BMotor2.getCurrentPosition() > 0){ //go down manually
@@ -224,16 +226,23 @@ public class BETASingleDriver extends LinearOpMode {
                     powerPDF2 -= F;
                 }
 
+                if (350 < targetPos && targetPos < 550) {
+                    threshold = 0.0625;
+                }
+                else{
+                    threshold = 0.125;
+                }
+
                 //If the values are slanting, adjust for it!
 /*                int diff = RV4BMotor1.getCurrentPosition() - RV4BMotor2.getCurrentPosition();
                 powerPDF1 -= diff * K_ADJ;
                 powerPDF2 += diff * K_ADJ;*/
 
-                if (Math.abs(powerPDF1) <= 0.1 || Math.abs(error1) <= 15){ //if power is less than 0.1 OR error is less than 15, set power to zero
+                if (Math.abs(powerPDF1) <= threshold || Math.abs(error1) <= 15){ //if power is less than 0.1 OR error is less than 15, set power to zero
                     powerPDF1 = 0;
                 }
 
-                if (Math.abs(powerPDF2) <= 0.1 || Math.abs(error2) <= 15) { //if power is less than 0.1 OR error is less than 15, set power to zero
+                if (Math.abs(powerPDF2) <= threshold || Math.abs(error2) <= 15) { //if power is less than 0.1 OR error is less than 15, set power to zero
                     powerPDF2 = 0;
                 }
 
@@ -341,6 +350,7 @@ public class BETASingleDriver extends LinearOpMode {
             telemetry.addData("PDF Power 2", powerPDF2);
             telemetry.addData("RV4B Error 1", error1);
             telemetry.addData("RV4B Error 2", error2);
+            telemetry.addData("PDF Power Threshold", threshold);
 
             //IMU Telemetry
             telemetry.addData("Yaw (Z)", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.DEGREES));
