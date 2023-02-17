@@ -21,22 +21,23 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.openftc.apriltag.AprilTagDetection;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.hardware.Servo;
 
 import java.util.ArrayList;
+
 ///sabled
 @Autonomous
-public class EncoderAprilTagAutonomousInitDetectionExample extends LinearOpMode {
+public class EncoderAprilTagAutonomousInitDetectionExample_experimental extends LinearOpMode {
     OpenCvCamera camera;
     AprilTagDetectionPipeline aprilTagDetectionPipeline;
 
@@ -148,7 +149,7 @@ public class EncoderAprilTagAutonomousInitDetectionExample extends LinearOpMode 
                 if (tagFound) {
                     telemetry.addLine("Tag of interest is in sight!\n\nLocation data:");
                 } else {
-                    telemetry.addLine("Don'+9t see tag of interest :(");
+                    telemetry.addLine("Don't see tag of interest :(");
 
                     if (tagOfInterest == null) {
                         telemetry.addLine("(The tag has never been seen)");
@@ -219,6 +220,22 @@ public class EncoderAprilTagAutonomousInitDetectionExample extends LinearOpMode 
 
         /* Actually do something useful */
         //go to location
+
+
+        Claw.setPosition(0.55);
+        encoderDrive(0.1,1,1);
+        encoderDrive(0.1, -11, 11);
+        encoderDrive(0.1, 24, 24);
+        encoderDrive(0.1, -11, 11);
+        encoderDrive(0.1, 38, 38);
+        encoderDrive(0.1, 17, -17);
+        LiftMotor.setTargetPosition(8000);
+        LiftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        LiftMotor.setPower(1);
+
+        encoderDrive(0.1, 4,4);
+
+        /*
         if(tagOfInterest == null || tagOfInterest.id == MIDDLE){
             //move forward 87 cm (34.25") to sit in the middle of the two tiles in front
             encoderDrive(0.1, 34, 34);
@@ -242,6 +259,8 @@ public class EncoderAprilTagAutonomousInitDetectionExample extends LinearOpMode 
             //move forward ~19"
             encoderDrive(0.1, 21, 21);
         }
+
+         */
 
 
     }

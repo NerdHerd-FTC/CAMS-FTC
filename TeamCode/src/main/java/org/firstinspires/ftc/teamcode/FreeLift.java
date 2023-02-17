@@ -57,12 +57,9 @@ public class FreeLift extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        double left;
-        double right;
-        double max;
 
-        int minLift = -1300;
-        int maxLift = 1300;
+        int minLift = -6000;
+        int maxLift = 6000;
 
 
         // Define and Initialize Motors
@@ -71,11 +68,6 @@ public class FreeLift extends LinearOpMode {
 
         MotorC.setDirection(DcMotor.Direction.REVERSE);
 
-        MotorC.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        MotorC.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        MotorC.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        int targetPositionLift = 0;
 
 
         // Send telemetry message to signify robot waiting;
@@ -89,49 +81,22 @@ public class FreeLift extends LinearOpMode {
         while (opModeIsActive()) {
 
 
-            // Robot Lift Speed
-            if ((gamepad1.left_bumper)&&(MotorC.getCurrentPosition() > minLift)) {   //down
-                targetPositionLift -= 20; //incrementing target position
+            if (gamepad1.right_trigger != 0){
+                MotorC.setPower(gamepad1.right_trigger);
             }
-            else if ((gamepad1.right_bumper)&&(MotorC.getCurrentPosition() < maxLift)) {   //up
-                targetPositionLift += 20; //incrementing target position
+            else if (gamepad1.left_trigger != 0 ) {
+                MotorC.setPower(-gamepad1.left_trigger);
             }
-
-            if(targetPositionLift>=maxLift)
-            {
-                targetPositionLift = maxLift;
-            }
-
-            if(targetPositionLift <= minLift)
-            {
-                targetPositionLift = minLift;
-            }
-
-            //if (MotorC.getCurrentPosition() !=  targetPositionLift && MotorD.getCurrentPosition() != -targetPositionLift) {
-            MotorC.setTargetPosition(targetPositionLift);
-            //MotorD.setTargetPosition(targetPositionLift);
-
-            MotorC.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            //MotorD.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-            MotorC.setPower(0.9);
-            //MotorD.setPower(0.9);
-            //}
-
-
-            if (!MotorC.isBusy()) {
-             MotorC.setPower(0);
-             //MotorD.setPower(0);
+            else{
+                MotorC.setPower(0);
             }
 
 
 
             // Send telemetry message to signify robot running;
-            telemetry.addData("claw offset: ",  "Offset = %.2f");
-
             telemetry.addData("lift max: ",  "%d", maxLift);
             telemetry.addData("lift min: ",  "%d", minLift);
-            telemetry.addData("lift Target Position: ",  "%d", targetPositionLift);
+            telemetry.addData("Lift Current Power: ",  "%.2f", MotorC.getPower());
             telemetry.addData("lift Current Position: ",  "%d", MotorC.getCurrentPosition());
 
             telemetry.update();

@@ -34,6 +34,8 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+
 
 /**
  * This particular OpMode executes a POV Game style Teleop for a direct drive robot
@@ -47,9 +49,9 @@ import com.qualcomm.robotcore.hardware.Servo;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@TeleOp(name="Robot: Teleop Main", group="Robot")
-//@Disabled
-public class RobotTeleopMain extends LinearOpMode {
+@TeleOp(name="Robot: Teleop Main (Old)", group="Robot")
+@Disabled
+public class Robot8BarTeleop extends LinearOpMode {
 
     /* Declare OpMode members. */
     public DcMotor  MotorA   = null;
@@ -154,11 +156,11 @@ public class RobotTeleopMain extends LinearOpMode {
             clawOffset = Range.clip(clawOffset, 0.95, 0.6);
             Servo1.setPosition(clawOffset);
   */
-            if (gamepad1.a) {
-                Servo1.setPosition(0.55);  //decrease to open more
+            if (gamepad1.a) { //open claw
+                Servo1.setPosition(0.55);  //decrease to open moreRobotTeleopMain
             }
 
-            if (gamepad1.b) {
+            if (gamepad1.b) { //close claw
                 Servo1.setPosition(0.25);  //increase to close more
             }
             //if(gamepad1.left_bumper && gamepad1.right_bumper) {
