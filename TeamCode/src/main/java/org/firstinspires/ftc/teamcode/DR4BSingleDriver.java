@@ -256,7 +256,9 @@ public class DR4BSingleDriver extends LinearOpMode {
                 double reducedPower = stickPower * 0.4;
                 RV4BMotor1.setPower(reducedPower);
                 RV4BMotor2.setPower(reducedPower);
-            } else if (Math.abs(gamepad2.right_trigger) >= 0.4 && Math.abs(gamepad2.left_trigger) >= 0.4) {
+            }
+
+            if (Math.abs(gamepad2.right_trigger) >= 0.4 && Math.abs(gamepad2.left_trigger) >= 0.4) {
                 //short-term speed boost, increases max power to 0.9
                 speedBOOST = 2;
             } else {
