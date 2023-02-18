@@ -209,9 +209,9 @@ public class DR4BSingleDriver extends LinearOpMode {
                 }
 
                 //If the values are slanting, adjust for it!
-/*                int diff = RV4BMotor1.getCurrentPosition() - RV4BMotor2.getCurrentPosition();
+                int diff = RV4BMotor1.getCurrentPosition() - RV4BMotor2.getCurrentPosition();
                 powerPDF1 -= diff * K_ADJ;
-                powerPDF2 += diff * K_ADJ;*/
+                powerPDF2 += diff * K_ADJ;
 
                 if (Math.abs(powerPDF1) <= threshold || Math.abs(error1) <= 15){ //if power is less than 0.1 OR error is less than 15, set power to zero
                     powerPDF1 = 0;

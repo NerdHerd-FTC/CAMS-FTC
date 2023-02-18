@@ -26,6 +26,15 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.openftc.apriltag.AprilTagDetection;
+import org.openftc.easyopencv.OpenCvCamera;
+import org.openftc.easyopencv.OpenCvCameraFactory;
+import org.openftc.easyopencv.OpenCvCameraRotation;
+
+import java.util.ArrayList;
+import java.util.Locale;
+
 @Autonomous(name="+1 Right (Encoders)", group="Robot")
 public class PlusOneEncoders extends LinearOpMode {
     public DcMotor leftDrive = null;
@@ -48,7 +57,29 @@ public class PlusOneEncoders extends LinearOpMode {
     int coneStack = 0; //know how high to reach to get the next cone
 
     static final double clawOpen = 0.5;
-    static final double clawClose = 0.2;
+    static final double clawClose = 0.1;
+
+    OpenCvCamera camera;
+    AprilTagDetectionPipeline aprilTagDetectionPipeline;
+
+    // Lens intrinsics
+    // UNITS ARE PIXELS
+    // NOTE: this calibration is for the C920 webcam at 800x448.
+    // You will need to do your own calibration for other configurations!
+    double fx = 578.272;
+    double fy = 578.272;
+    double cx = 402.145;
+    double cy = 221.506;
+    double tagsize = 0.166; //meters
+
+    //above are used for trajectory, not identification; not really useful for us
+
+    // Tag ID 121, 122, 123 from the 36h11 family
+    int LEFT = 121;
+    int MIDDLE = 122;
+    int RIGHT = 123;
+
+    AprilTagDetection tagOfInterest = null;
 
     @Override
     public void runOpMode() {
@@ -90,12 +121,102 @@ public class PlusOneEncoders extends LinearOpMode {
 
         telemetry.setMsTransmissionInterval(20);
 
-        waitForStart();
+        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+        camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam"), cameraMonitorViewId);
+        aprilTagDetectionPipeline = new AprilTagDetectionPipeline(tagsize, fx, fy, cx, cy);
+
+        camera.setPipeline(aprilTagDetectionPipeline);
+        camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
+        {
+            @Override
+            public void onOpened()
+            {
+                camera.startStreaming(800,448, OpenCvCameraRotation.UPRIGHT);
+            }
+            @Override
+            public void onError(int errorCode)
+            {
+                telemetry.addData("CAMERA ERROR=%d", errorCode);
+            }
+        });
+
+        /*
+         * The INIT-loop:
+         * This REPLACES waitForStart!
+         */
+        while (!isStarted() && !isStopRequested())
+        {
+            ArrayList<AprilTagDetection> currentDetections = aprilTagDetectionPipeline.getLatestDetections();
+
+            if(currentDetections.size() != 0)
+            {
+                boolean tagFound = false;
+
+                for(AprilTagDetection tag : currentDetections)
+                {
+                    if(tag.id == LEFT || tag.id == MIDDLE || tag.id == RIGHT)
+                    {
+                        tagOfInterest = tag;
+                        tagFound = true;
+                        break;
+                    }
+                }
+
+                if(tagFound)
+                {
+                    telemetry.addLine(String.format(Locale.US, "Detected tag ID: %d", tagOfInterest.id));
+                }
+                else
+                {
+                    if(tagOfInterest == null)
+                    {
+                        telemetry.addLine("A tag? Nope, never seen one before.");
+                    }
+                    else
+                    {
+                        telemetry.addLine(String.format(Locale.US, "Hmm... The last tag I saw was tag %d, but it was a while ago!", tagOfInterest.id));
+                    }
+                }
+
+            }
+            else
+            {
+                if(tagOfInterest == null)
+                {
+                    telemetry.addLine("A tag? Nope, never seen one before.");
+                }
+                else
+                {
+                    telemetry.addLine(String.format(Locale.US, "Hmm... The last tag I saw was tag %d, but it was a while ago!", tagOfInterest.id));
+                }
+
+            }
+
+            telemetry.update();
+            sleep(20);
+        }
+
+
+        /*
+         * The START command just came in: now work off the latest snapshot acquired
+         * during the init loop.
+         */
+
+        /* Update the telemetry */
+        if(tagOfInterest != null)
+        {
+            telemetry.addLine(String.format(Locale.US, "Located tag %d!", tagOfInterest.id));
+        }
+        else
+        {
+            telemetry.addLine("No tag found... Let's guess!");
+        }
+        telemetry.update();
 
         //START:
 
         clawFinger.setPosition(clawOpen);
-        sleep(200);
+        sleep(1000);
         clawFinger.setPosition(clawClose);
 
         //move forward to high junction
@@ -104,9 +225,9 @@ public class PlusOneEncoders extends LinearOpMode {
         armControl(HIGH_JUNCTION_TICKS);
 
         //turn to high junction
-        turn(45);
+        turn(-46);
 
-        forwardPID(5);
+        forwardPID(5.8);
 
         //wait until arm is at height
         while (DR4BMotor1.isBusy() && DR4BMotor2.isBusy()) {
@@ -124,8 +245,19 @@ public class PlusOneEncoders extends LinearOpMode {
         forwardPID(-5);
 
         armControl(0);
-        turn(-45);
+
+        //go to parking location
+        if(tagOfInterest == null || tagOfInterest.id == LEFT){
+            turn(135);
+            forwardPID(23);
+        }else if(tagOfInterest.id == MIDDLE){
+            //Do nothing
+        }else{
+            turn(-44);
+            forwardPID(23);
+        }
     }
+
 
     private void forwardPID(double targetInches) {
         int location = (leftDrive.getCurrentPosition() + rightDrive.getCurrentPosition())/2;
@@ -179,8 +311,8 @@ public class PlusOneEncoders extends LinearOpMode {
         final double TICKS_PER_DEGREE = 11.0 / 90 * COUNTS_PER_INCH;
         final double DEGREES_PER_TICK = 90.0/(11*COUNTS_PER_INCH);
 
-        double leftTarget = -TICKS_PER_DEGREE * degrees; //left negative
-        double rightTarget = TICKS_PER_DEGREE * degrees;; //right positive
+        double leftTarget = -TICKS_PER_DEGREE * degrees + leftDrive.getCurrentPosition(); //left negative
+        double rightTarget = TICKS_PER_DEGREE * degrees + rightDrive.getCurrentPosition(); //right positive
 
         double leftError = leftTarget;
         double rightError = rightTarget;
@@ -211,7 +343,7 @@ public class PlusOneEncoders extends LinearOpMode {
             //D
             double D_RIGHT = D_MULT_TURN * (rightError - prevRightError);
             //Set power using PID
-            double rightPower = P_LEFT + D_LEFT; //cap power at += 1
+            double rightPower = P_RIGHT + D_RIGHT; //cap power at += 1
 
             leftDrive.setPower(Math.tanh(leftPower));
             rightDrive.setPower(Math.tanh(rightPower));

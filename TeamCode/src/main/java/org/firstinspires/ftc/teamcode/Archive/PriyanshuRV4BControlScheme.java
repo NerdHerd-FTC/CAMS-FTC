@@ -36,7 +36,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 /**
  * TelelOp for Double Reverse Virtual 4 Bar with Macro
  */
-@TeleOp(name= "Single Driver - RV4B", group="Robot")
+@TeleOp(name= "Single Driver - Mr. Sharma", group="Robot")
 @Disabled
 public class PriyanshuRV4BControlScheme extends LinearOpMode {
     /* Declare OpMode members. */
