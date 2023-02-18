@@ -225,9 +225,9 @@ public class PlusOneEncoders extends LinearOpMode {
         armControl(HIGH_JUNCTION_TICKS);
 
         //turn to high junction
-        turn(-46);
+        turn(-45);
 
-        forwardPID(5.8);
+        forwardPID(6);
 
         //wait until arm is at height
         while (DR4BMotor1.isBusy() && DR4BMotor2.isBusy()) {
@@ -238,11 +238,11 @@ public class PlusOneEncoders extends LinearOpMode {
 
         //open claw
         clawFinger.setPosition(clawOpen);
-        sleep(1000);
+        sleep(2000);
         clawFinger.setPosition(clawClose);
 
         //straighten
-        forwardPID(-5);
+        forwardPID(-5.25);
 
         armControl(0);
 
@@ -251,9 +251,9 @@ public class PlusOneEncoders extends LinearOpMode {
             turn(135);
             forwardPID(23);
         }else if(tagOfInterest.id == MIDDLE){
-            //Do nothing
+            turn(45);
         }else{
-            turn(-44);
+            turn(-45);
             forwardPID(23);
         }
     }
