@@ -19,7 +19,7 @@
  * SOFTWARE.
  */
 
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.Archive;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -30,21 +30,18 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
-@Autonomous(name="+1 Right", group="Robot")
+@Autonomous(name="5+1 Right", group="Robot")
 @Disabled
-public class PlusOneIMU extends LinearOpMode {
+public class FivePlusOneRight extends LinearOpMode {
     public DcMotor leftDrive = null;
     public DcMotor rightDrive = null;
     public DcMotor RV4BMotor1 = null;
     public DcMotor RV4BMotor2 = null;
     public Servo clawFinger = null;
 
-    static RevHubOrientationOnRobot.LogoFacingDirection[] logoFacingDirections
-            = RevHubOrientationOnRobot.LogoFacingDirection.values();
-    static RevHubOrientationOnRobot.UsbFacingDirection[] usbFacingDirections
-            = RevHubOrientationOnRobot.UsbFacingDirection.values();
     IMU imu;
 
     static final double COUNTS_PER_MOTOR_REV = 28;    //UltraPlanetary Gearbox Kit & HD Hex Motor
@@ -52,12 +49,11 @@ public class PlusOneIMU extends LinearOpMode {
     static final double WHEEL_DIAMETER_INCH = 3.65;    // For figuring circumference: 90mm
     static final double COUNTS_PER_INCH = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) / (WHEEL_DIAMETER_INCH * Math.PI);
 
-    static final double ARM_POWER = 0.65; //for quick adjustments
+    static final double ARM_POWER = Math.abs(0.65); //for quick adjustments
 
-    static final int  HIGH_JUNCTION_TICKS = 690;
-    static final int  MEDIUM_JUNCTION_TICKS = 420;
-    static final int  LOW_JUNCTION_TICKS = 290;
-
+    static final int lowJunction = 0; //for RV4B
+    static final int highJunction = 380;
+    static final int groundJunction = 0;
     int coneStack = 0; //know how high to reach to get the next cone
 
     static final double clawOpen = 0.5;
@@ -105,49 +101,49 @@ public class PlusOneIMU extends LinearOpMode {
 
         //initialize & setup IMU
         imu = hardwareMap.get(IMU.class, "imu");
-        RevHubOrientationOnRobot.LogoFacingDirection logo = logoFacingDirections[0]; //logo facing UP
-        RevHubOrientationOnRobot.UsbFacingDirection usb = usbFacingDirections[4]; //usb ports facing to the LEFT
-        RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logo, usb);
-        imu.initialize(new IMU.Parameters(orientationOnRobot));
-        clawFinger.setPosition(clawClose);
+        IMU.Parameters myIMUparameters;
+        myIMUparameters = new IMU.Parameters(
+                new RevHubOrientationOnRobot(
+                        RevHubOrientationOnRobot.LogoFacingDirection.UP,
+                        RevHubOrientationOnRobot.UsbFacingDirection.RIGHT
+                )
+        );
+        imu.initialize(myIMUparameters);
+        imu.resetYaw();
 
-        //wait for start
-        while (!isStarted() && !isStopRequested()) {
-            YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
-            telemetry.addData("Yaw", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.DEGREES));
-            telemetry.update();
-        }
-
-        //start
         YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+        telemetry.addData("Yaw", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.DEGREES));
+
+        waitForStart();
+        orientation = imu.getRobotYawPitchRollAngles();
         final double startingAngle = orientation.getYaw(AngleUnit.DEGREES);
-
-        //move forward to high junction
-        forwardPID(-50.125, startingAngle);
-
-        //turn to high junction
-        turnIMU(45);
-
-        //wait until arm is at height
-        while (RV4BMotor1.isBusy() && RV4BMotor2.isBusy()) {
-
-        }
-        RV4BMotor1.setPower(0);
-        RV4BMotor2.setPower(0);
-
-        //open claw
-        clawFinger.setPosition(clawOpen);
-
-        //straighten
+        //i can nearly guarantee this won't work but it's a starting point
+        //ideal objective is to score 42 pts: 1 on high junction (5 points), 4 on low junction (12 points), 1 on ground junction (5 points - 2 points from scoring and 3 points for ownership), plus park (20 points)
+        //forwardPID(-50.125, startingAngle); //move forward to high junction
+        turnIMU(45); //turn to high junction
+        //lift arm & score con
+        turnIMU(-90); //turn to cone stack
+        turnIMU(120);
         turnIMU(0);
+        turnIMU(-45);
+        turnIMU(-180);
+        turnIMU(179);
+        //forwardPID(-27.625, -90); //move to cone stack
+        //cone pick up here & start to lift up arm
+        //turnIMU(45); //turn to ground junction
+        //forwardPID(-26.5, 45); //move to ground junction
+        //lower arm --> score --> move arm up (need to take measurements)
+        //turnIMU(-135); //turn back to cone stack
+        //forwardPID(-26.5, -135);
+        //for (int i=0; i<4; i++) { //loop 4 times for 4 cones left in stack
+            //pick up cone
+        //turnIMU(135);
+        //forwardPID(-26.5, 135);
+            //raise arm to low junction & score
+        //turnIMU(-45); //turn back to cone stack
+        //forwardPID(-26.5, -45);
+        }
 
-        //lower arm back to the ground
-        //wait to straighten before lowering to prevent getting stuck on the junction
-        armControl(0);
-
-        //close claw
-        clawFinger.setPosition(0);
-    }
 
     private void forwardPID(double targetInches, double startingAngle) {
         int location = leftDrive.getCurrentPosition();
@@ -193,12 +189,6 @@ public class PlusOneIMU extends LinearOpMode {
 
             leftDrive.setPower(leftPower);
             rightDrive.setPower(rightPower);
-
-            //set RV4B power to zero when motors are off - may be a redundancy
-            if (!RV4BMotor1.isBusy() && !RV4BMotor2.isBusy()) {
-                RV4BMotor1.setPower(0);
-                RV4BMotor2.setPower(0);
-            }
 
             telemetry.addData("Location: ", leftDrive.getCurrentPosition());
             telemetry.addData("Target: ", target);
@@ -264,12 +254,6 @@ public class PlusOneIMU extends LinearOpMode {
             leftDrive.setPower(-power);
             rightDrive.setPower(power);
 
-            //set RV4B power to zero when motors are off - may be a redundancy
-            if (!RV4BMotor1.isBusy() && !RV4BMotor2.isBusy()) {
-                RV4BMotor1.setPower(0);
-                RV4BMotor2.setPower(0);
-            }
-
             telemetry.addLine("ROTATING");
             telemetry.addData("Target", degrees);
             telemetry.addData("Error", error);
@@ -290,5 +274,4 @@ public class PlusOneIMU extends LinearOpMode {
         RV4BMotor1.setPower(ARM_POWER);
         RV4BMotor2.setPower(ARM_POWER);
     }
-
 }

@@ -21,22 +21,17 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
-
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 @Autonomous(name="+1 Right (Encoders)", group="Robot")
 public class PlusOneEncoders extends LinearOpMode {
     public DcMotor leftDrive = null;
     public DcMotor rightDrive = null;
-    public DcMotor RV4BMotor1 = null;
-    public DcMotor RV4BMotor2 = null;
+    public DcMotor DR4BMotor1 = null;
+    public DcMotor DR4BMotor2 = null;
     public Servo clawFinger = null;
 
     static final double COUNTS_PER_MOTOR_REV = 28;    //UltraPlanetary Gearbox Kit & HD Hex Motor
@@ -76,29 +71,31 @@ public class PlusOneEncoders extends LinearOpMode {
         leftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        RV4BMotor1 = hardwareMap.get(DcMotor.class, "MotorC");
-        RV4BMotor2 = hardwareMap.get(DcMotor.class, "MotorD");
+        DR4BMotor1 = hardwareMap.get(DcMotor.class, "MotorC");
+        DR4BMotor2 = hardwareMap.get(DcMotor.class, "MotorD");
         clawFinger = hardwareMap.get(Servo.class, "ServoFinger");
 
         //core hex motors are facing opposite each other and will rotate in opposite directions
-        RV4BMotor1.setDirection(DcMotor.Direction.FORWARD);
-        RV4BMotor2.setDirection(DcMotor.Direction.REVERSE);
+        DR4BMotor1.setDirection(DcMotor.Direction.FORWARD);
+        DR4BMotor2.setDirection(DcMotor.Direction.REVERSE);
 
-        RV4BMotor1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        RV4BMotor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        DR4BMotor1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        DR4BMotor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-        RV4BMotor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        RV4BMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        DR4BMotor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        DR4BMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        RV4BMotor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        RV4BMotor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        DR4BMotor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        DR4BMotor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         telemetry.setMsTransmissionInterval(20);
 
         waitForStart();
 
-        //start
+        //START:
+
         clawFinger.setPosition(clawOpen);
+        sleep(200);
         clawFinger.setPosition(clawClose);
 
         //move forward to high junction
@@ -112,11 +109,11 @@ public class PlusOneEncoders extends LinearOpMode {
         forwardPID(5);
 
         //wait until arm is at height
-        while (RV4BMotor1.isBusy() && RV4BMotor2.isBusy()) {
+        while (DR4BMotor1.isBusy() && DR4BMotor2.isBusy()) {
 
         }
-        RV4BMotor1.setPower(0);
-        RV4BMotor2.setPower(0);
+        DR4BMotor1.setPower(0);
+        DR4BMotor2.setPower(0);
 
         //open claw
         clawFinger.setPosition(clawOpen);
@@ -157,10 +154,7 @@ public class PlusOneEncoders extends LinearOpMode {
             rightDrive.setPower(drivePower);
 
             //set RV4B power to zero when motors are off - may be a redundancy
-            if (!RV4BMotor1.isBusy() && !RV4BMotor2.isBusy()) {
-                RV4BMotor1.setPower(0);
-                RV4BMotor2.setPower(0);
-            }
+            armCheck();
 
             telemetry.addData("Location: ", leftDrive.getCurrentPosition());
             telemetry.addData("Target: ", target);
@@ -177,13 +171,19 @@ public class PlusOneEncoders extends LinearOpMode {
     //utilizes 180 to -180
     //right - negative
     //left - positive
+    //RELATIVE TO ROBOT
     private void turn(double degrees) {
+        //angle to ticks conversion
         //11 inch = 90 deg.
         //11/90 deg = 1 deg.
         final double TICKS_PER_DEGREE = 11.0 / 90 * COUNTS_PER_INCH;
         final double DEGREES_PER_TICK = 90.0/(11*COUNTS_PER_INCH);
-        double target = TICKS_PER_DEGREE * degrees;
-        double error = target;
+
+        double leftTarget = -TICKS_PER_DEGREE * degrees; //left negative
+        double rightTarget = TICKS_PER_DEGREE * degrees;; //right positive
+
+        double leftError = leftTarget;
+        double rightError = rightTarget;
 
         //K constants
         final double K_P_TURN = 0.0015 * 5.969 * DEGREES_PER_TICK;
@@ -192,58 +192,72 @@ public class PlusOneEncoders extends LinearOpMode {
 
         final double D_MULT_TURN = K_D_TURN / DELTA_T;
 
-        while (opModeIsActive() && Math.abs(error) >= 15) {
-            double location = leftDrive.getCurrentPosition();
-            double prevError = error;
-            error = (target - location);
-            //P
-            double P = K_P_TURN * error;
+        while (opModeIsActive() && Math.abs(leftError) >= 15 && Math.abs(rightError) >= 15) {
+            double leftLocation = leftDrive.getCurrentPosition();
+            double prevLeftError = leftError;
+            leftError = leftTarget - leftLocation;
+
+            double P_LEFT = K_P_TURN * leftError;
             //D
-            double D = D_MULT_TURN * (error - prevError);
+            double D_LEFT = D_MULT_TURN * (leftError - prevLeftError);
             //Set power using PID
-            double drivePower = P + D; //cap power at += 1
+            double leftPower = P_LEFT + D_LEFT;
 
-            double leftPower = Math.tanh(-drivePower); //normalize power to between +- 1
-            double rightPower = Math.tanh(drivePower); //normalize power to between +- 1
+            double rightLocation = rightDrive.getCurrentPosition();
+            double prevRightError = rightError;
+            rightError = rightTarget - rightLocation;
 
-            leftDrive.setPower(leftPower);
-            rightDrive.setPower(rightPower);
+            double P_RIGHT = K_P_TURN * rightError;
+            //D
+            double D_RIGHT = D_MULT_TURN * (rightError - prevRightError);
+            //Set power using PID
+            double rightPower = P_LEFT + D_LEFT; //cap power at += 1
+
+            leftDrive.setPower(Math.tanh(leftPower));
+            rightDrive.setPower(Math.tanh(rightPower));
 
             //set RV4B power to zero when motors are off - may be a redundancy
-            if (!RV4BMotor1.isBusy() && !RV4BMotor2.isBusy()) {
-                RV4BMotor1.setPower(0);
-                RV4BMotor2.setPower(0);
+            if (!DR4BMotor1.isBusy() && !DR4BMotor2.isBusy()) {
+                DR4BMotor1.setPower(0);
+                DR4BMotor2.setPower(0);
             }
 
-            telemetry.addData("Location: ", leftDrive.getCurrentPosition());
-            telemetry.addData("Target: ", target);
-            telemetry.addData("Error Number: ", error);
-            telemetry.addData("Raw Drive Power: ", drivePower);
-            telemetry.addData("Left Power: ", leftPower);
-            telemetry.addData("Right Power: ", rightPower);
+            telemetry.addData("Left Location", leftDrive.getCurrentPosition());
+            telemetry.addData("Left Target: ", leftTarget);
+            telemetry.addData("Left Error: ", leftError);
+            telemetry.addData("Left Raw Drive Power: ", leftPower);
+            telemetry.addData("Left Drive Power: ", leftDrive.getPower());
+            telemetry.addLine("\n\n");
+            telemetry.addData("Right Location", rightDrive.getCurrentPosition());
+            telemetry.addData("Right Target: ", rightTarget);
+            telemetry.addData("Right Error: ", rightError);
+            telemetry.addData("Right Raw Drive Power: ", rightPower);
+            telemetry.addData("Right Drive Power: ", rightDrive.getPower());
             telemetry.update();
 
             sleep(DELTA_T);
         }
-
-        //set RV4B power to zero when motors are off - may be a redundancy
-        if (!RV4BMotor1.isBusy() && !RV4BMotor2.isBusy()) {
-            RV4BMotor1.setPower(0);
-            RV4BMotor2.setPower(0);
-        }
-        sleep(20);
+        armCheck();
     }
 
     private void armControl(int loc) {
         if (opModeIsActive()) {
-            RV4BMotor1.setTargetPosition(loc);
-            RV4BMotor2.setTargetPosition(loc);
+            DR4BMotor1.setTargetPosition(loc);
+            DR4BMotor2.setTargetPosition(loc);
 
-            RV4BMotor1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            RV4BMotor2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            DR4BMotor1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            DR4BMotor2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-            RV4BMotor1.setPower(ARM_POWER);
-            RV4BMotor2.setPower(ARM_POWER);
+            DR4BMotor1.setPower(ARM_POWER);
+            DR4BMotor2.setPower(ARM_POWER);
+        }
+    }
+
+    //use in the future as a PDF threshold checker
+    private void armCheck() {
+        if (!DR4BMotor1.isBusy() && !DR4BMotor2.isBusy()) {
+            DR4BMotor1.setPower(0);
+            DR4BMotor2.setPower(0);
         }
     }
 }

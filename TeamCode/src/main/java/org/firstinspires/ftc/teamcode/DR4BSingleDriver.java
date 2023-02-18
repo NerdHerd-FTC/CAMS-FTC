@@ -26,23 +26,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package org.firstinspires.ftc.teamcode;
-import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
-
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
-import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+import com.qualcomm.robotcore.util.Range;
 
 /**
  * TelelOp for Double Reverse Virtual 4 Bar with Macro
  */
-@TeleOp(name= "Beta Single Driver - RV4B", group="Robot")
-public class BETASingleDriver extends LinearOpMode {
+@TeleOp(name= "Single Driver - DR4B", group="Robot")
+public class DR4BSingleDriver extends LinearOpMode {
     /* Declare OpMode members. */
     public DcMotor  leftDrive   = null;
     public DcMotor  rightDrive  = null;
@@ -74,10 +70,7 @@ public class BETASingleDriver extends LinearOpMode {
         double threshold = 0.125;
         double SPEED_MULT = 0.75;
         boolean xStorage = false;
-        double targetDegrees = 0;
-        boolean turning90 = false;
-        double currentAngle = 0;
-        double errorTurn;
+        double speedBOOST = 1;
 
         //K Variable Bank
         double K_P = 0.0025;
@@ -87,9 +80,9 @@ public class BETASingleDriver extends LinearOpMode {
         double D_MULT = K_D / DELTA_T;
         double F = 0.07;
 
-        final double K_P_TURN = 0.0015; //0.0015
+        /*final double K_P_TURN = 0.0015; //0.0015
         final double K_D_TURN = 0.03;
-        final double D_MULT_TURN = K_D_TURN / telemetry.getMsTransmissionInterval();;
+        final double D_MULT_TURN = K_D_TURN / telemetry.getMsTransmissionInterval();*/
 
         //Telemetry update variables:
         String speed = "Normal";
@@ -102,7 +95,6 @@ public class BETASingleDriver extends LinearOpMode {
         RV4BMotor1 = hardwareMap.get(DcMotor.class, "MotorC");
         RV4BMotor2 = hardwareMap.get(DcMotor.class, "MotorD");
         clawFinger = hardwareMap.get(Servo.class, "ServoFinger");
-        imu = hardwareMap.get(IMU.class, "imu");
 
         //core hex motors are facing opposite each other and will rotate in opposite directions
         RV4BMotor1.setDirection(DcMotor.Direction.FORWARD);
@@ -123,16 +115,6 @@ public class BETASingleDriver extends LinearOpMode {
         leftDrive.setDirection(DcMotor.Direction.REVERSE);
         rightDrive.setDirection(DcMotor.Direction.FORWARD);
 
-        IMU.Parameters myIMUparameters;
-        myIMUparameters = new IMU.Parameters(
-                new RevHubOrientationOnRobot(
-                        RevHubOrientationOnRobot.LogoFacingDirection.UP,
-                        RevHubOrientationOnRobot.UsbFacingDirection.RIGHT
-                )
-        );
-        imu.initialize(myIMUparameters);
-        imu.resetYaw();
-
         runtime.reset();
 
         // Send telemetry message to signify robot waiting;
@@ -147,13 +129,6 @@ public class BETASingleDriver extends LinearOpMode {
             // This way it's also easy to just drive straight, or just turn.
             drive = -gamepad1.left_stick_y;
             turn  =  gamepad1.right_stick_x;
-
-            if (drive  >= 0.05 || turn >= 0.05) {
-                turning90 = false;
-            }
-
-            YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
-            AngularVelocity angularVelocity = imu.getRobotAngularVelocity(AngleUnit.DEGREES);
 
             //Handle speed multiplication
             if (gamepad1.right_stick_button && !xStorage) {
@@ -265,74 +240,31 @@ public class BETASingleDriver extends LinearOpMode {
             // Combine drive and turn for blended motion.
             left = drive + turn;
             right = drive - turn;
-            // Normalize the values so neither exceed +/FinalControlScheme- 1.0
-            left = Math.tanh(left);
-            right = Math.tanh(right);
 
-            /*//90 degree buttons
-            if(gamepad1.dpad_left){
-                targetDegrees = 90;
-                turning90 = true;
+            //OPERATOR CONTROL:
+            //reset encoders by clicking X & left stick button - intentionally very awkward
+            if (gamepad2.x && gamepad2.left_stick_button) {
+                RV4BMotor1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                RV4BMotor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+                RV4BMotor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                RV4BMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                telemetry.addLine("ENCODERS RESET!");
+            } else if (Math.abs(gamepad2.left_stick_y) >= 0.4 && Math.abs(gamepad2.right_stick_y) >= 0.4) {
+                //manual control of lift, regardless of encoder limits
+                double stickPower = (-gamepad2.left_stick_y - gamepad2.right_stick_y)/2;
+                double reducedPower = stickPower * 0.4;
+                RV4BMotor1.setPower(reducedPower);
+                RV4BMotor2.setPower(reducedPower);
+            } else if (Math.abs(gamepad2.right_trigger) >= 0.4 && Math.abs(gamepad2.left_trigger) >= 0.4) {
+                //short-term speed boost, increases max power to 0.9
+                speedBOOST = 2;
+            } else {
+                speedBOOST = 1;
             }
-            else if(gamepad1.dpad_right){
-                targetDegrees = -90;
-                turning90 = true;
-            } else if (gamepad1.dpad_up){
-                targetDegrees = 0;
-                turning90 = true;
-            } else if (gamepad1.dpad_down) {
-                targetDegrees = 180;
-                turning90 = true;
-            }
 
-            if (turning90){
-                double prevAngle = currentAngle;
-                currentAngle = orientation.getYaw(AngleUnit.DEGREES);
-
-                errorTurn = targetDegrees - currentAngle;
-
-                //get most efficient angle (imu has angles from -180 to 180)
-               if (errorTurn > 180) {
-                    errorTurn -= 360;
-                } else if (errorTurn < -180) {
-                    errorTurn += 360;
-                }
-
-                double turnP = K_P_TURN * errorTurn * 5.969; //convert angle to ticks so that the P still applies
-                double turnD = D_MULT_TURN * (currentAngle - prevAngle);
-
-                double powerTurn = Math.tanh(turnP + turnD); //Normalize power to +/- 1.0
-
-                telemetry.addLine("ROTATING");
-                telemetry.addData("Turning error", errorTurn);
-                telemetry.addData("Turning power P", turnP);
-                telemetry.addData("Turning power D", turnD);
-                telemetry.addData("Final turning power", powerTurn);
-
-                leftDrive.setPower(-powerTurn);
-                rightDrive.setPower(powerTurn);
-
-                *//*if (targetDegrees < currentAngle && Math.abs(errorTurn) > 2) {
-                    leftDrive.setPower(-powerTurn);
-                    rightDrive.setPower(powerTurn);
-                } else if (targetDegrees > currentAngle && Math.abs(errorTurn) > 2) {
-                    leftDrive.setPower(powerTurn);
-                    rightDrive.setPower(-powerTurn);
-                } else {
-                    leftDrive.setPower(0);
-                    rightDrive.setPower(0);
-                    turning90 = false;
-                }*//*
-            }
-            else{
-                // Output the normalized vales to the motor drives.
-                leftDrive.setPower(left * SPEED_MULT);
-                rightDrive.setPower(right * SPEED_MULT);
-                turning90 = false;
-            }*/
-
-            leftDrive.setPower(left * SPEED_MULT);
-            rightDrive.setPower(right * SPEED_MULT);
+            leftDrive.setPower(Math.tanh(left * SPEED_MULT * speedBOOST));
+            rightDrive.setPower(Math.tanh(right * SPEED_MULT * speedBOOST));
 
             // Send telemetry message to signify robot running;
             telemetry.addData("Speed", speed);
@@ -351,10 +283,6 @@ public class BETASingleDriver extends LinearOpMode {
             telemetry.addData("RV4B Error 1", error1);
             telemetry.addData("RV4B Error 2", error2);
             telemetry.addData("PDF Power Threshold", threshold);
-
-            //IMU Telemetry
-            telemetry.addData("Yaw (Z)", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.DEGREES));
-            telemetry.addData("Yaw (Z) velocity", "%.2f Deg/Sec", angularVelocity.zRotationRate); //rotational location
 
             telemetry.update();
 
