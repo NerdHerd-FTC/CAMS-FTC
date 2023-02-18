@@ -131,7 +131,7 @@ public class PlusOneEncoders extends LinearOpMode {
     }
 
     private void forwardPID(double targetInches) {
-        int location = leftDrive.getCurrentPosition();
+        int location = (leftDrive.getCurrentPosition() + rightDrive.getCurrentPosition())/2;
         final int target = (int) (COUNTS_PER_INCH * targetInches) + location; //in encoder ticks
         double error = (target - location);
         final int DELTA_T = 35;
@@ -143,7 +143,7 @@ public class PlusOneEncoders extends LinearOpMode {
         final double D_MULT_MOVE = K_D_MOVE / DELTA_T;
 
         while (opModeIsActive() && Math.abs(error) >= 15) {
-            location = leftDrive.getCurrentPosition();
+            location = (leftDrive.getCurrentPosition() + rightDrive.getCurrentPosition())/2;
             double prevError = error;
             error = (target - location);
             //P
@@ -151,13 +151,10 @@ public class PlusOneEncoders extends LinearOpMode {
             //D
             double D = D_MULT_MOVE * (error - prevError);
             //Set power using PID
-            double drivePower = P + D; //cap power at += 1
+            double drivePower = Math.tanh(P + D); //cap power at += 1
 
-            double leftPower = Math.tanh(drivePower); //normalize power to between +- 1
-            double rightPower = Math.tanh(drivePower); //normalize power to between +- 1
-
-            leftDrive.setPower(leftPower);
-            rightDrive.setPower(rightPower);
+            leftDrive.setPower(drivePower);
+            rightDrive.setPower(drivePower);
 
             //set RV4B power to zero when motors are off - may be a redundancy
             if (!RV4BMotor1.isBusy() && !RV4BMotor2.isBusy()) {
@@ -169,8 +166,6 @@ public class PlusOneEncoders extends LinearOpMode {
             telemetry.addData("Target: ", target);
             telemetry.addData("Error Number: ", error);
             telemetry.addData("Raw Drive Power: ", drivePower);
-            telemetry.addData("Left Power: ", leftPower);
-            telemetry.addData("Right Power: ", rightPower);
             telemetry.addData("Target Inch: ", targetInches);
             telemetry.update();
 
