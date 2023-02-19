@@ -53,6 +53,7 @@ public class DR4BSingleDriver extends LinearOpMode {
     static final double MACRO_POWER = 0.6; //for quick adjustments
     static final int ARM_SPEED_MANUAL = 10;
     private ElapsedTime runtime = new ElapsedTime();
+    private ElapsedTime liftTime  = new ElapsedTime();
 
     IMU imu;
 
@@ -116,6 +117,7 @@ public class DR4BSingleDriver extends LinearOpMode {
         rightDrive.setDirection(DcMotor.Direction.FORWARD);
 
         runtime.reset();
+        liftTime.reset();
 
         // Send telemetry message to signify robot waiting;
         telemetry.addData(">", "Robot Ready.  Press Play.");    //
@@ -149,16 +151,20 @@ public class DR4BSingleDriver extends LinearOpMode {
             //Macros!
             if (gamepad1.y) { //go to high
                 targetPos = HIGH_JUNCTION_TICKS;
+                liftTime.reset();
             }
             else if (gamepad1.b) { //go to medium
                 targetPos = MEDIUM_JUNCTION_TICKS;
+                liftTime.reset();
             }
             else if (gamepad1.x) { //go to low
                 targetPos = LOW_JUNCTION_TICKS;
+                liftTime.reset();
             }
             else if (gamepad1.a) { //go to ground
                 targetPos = 0;
                 clawFinger.setPosition(0.1);
+                liftTime.reset();
             }
 
             if (gamepad1.left_trigger >= 0.4 && RV4BMotor1.getCurrentPosition() > -100 && RV4BMotor2.getCurrentPosition() > -100){ //go down manually
@@ -180,7 +186,7 @@ public class DR4BSingleDriver extends LinearOpMode {
             double powerPDF2 = 0;
 
             //Base PID
-            if (!manualControl) {
+            if (!manualControl && liftTime.seconds() < 10) {
                 error1 = targetPos - RV4BMotor1.getCurrentPosition();
                 double P1 = K_P * error1;
                 double D1 = D_MULT * (prevPos1 - RV4BMotor1.getCurrentPosition());
@@ -218,10 +224,12 @@ public class DR4BSingleDriver extends LinearOpMode {
 
                 if (Math.abs(powerPDF1) <= threshold || Math.abs(error1) <= 15){ //if power is less than 0.1 OR error is less than 15, set power to zero
                     powerPDF1 = 0;
+                    liftTime.reset();
                 }
 
                 if (Math.abs(powerPDF2) <= threshold || Math.abs(error2) <= 15) { //if power is less than 0.1 OR error is less than 15, set power to zero
                     powerPDF2 = 0;
+                    liftTime.reset();
                 }
 
                 //Final RV4B Motor Powers
