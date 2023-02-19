@@ -72,10 +72,11 @@ public class RobotTeleopMain_Eleveator extends LinearOpMode {
         double right;
         double lift = 0;
         double max;
-        double servo = 0;
+        double targetPositionServo = 0;
+        double ServoLastSet = 0;
 
         int minLift = 0;
-        int maxLift = 4260;
+        int maxLift = 4400;
 
         final double K_P = 0.03;
 
@@ -124,7 +125,7 @@ public class RobotTeleopMain_Eleveator extends LinearOpMode {
             //PID(speed);
 
             // Robot Drive Base Speed
-            left = gamepad1.left_stick_y*0.4;
+            left = gamepad1.left_stick_y*0.5;
             right = gamepad1.right_stick_y*0.5;
 
             max = Math.abs(left);
@@ -162,14 +163,19 @@ public class RobotTeleopMain_Eleveator extends LinearOpMode {
 
 
 
-
+            //OPENING
             if (gamepad1.left_bumper && gamepad1.right_bumper){
-                Servo1.setPosition(0.25);
-            }
-            else if (gamepad1.left_bumper || gamepad1.right_bumper){
-                Servo1.setPosition(0.55);
-            }
+                //decrease to open more
+                targetPositionServo = 0.3;
+                Servo1.setPosition(targetPositionServo);
 
+            }
+            //CLOSING
+            else if (gamepad1.left_bumper || gamepad1.right_bumper){
+                //increase to close more
+                targetPositionServo = 0.7;
+                Servo1.setPosition(targetPositionServo);
+            }
 
 
 
@@ -187,12 +193,12 @@ public class RobotTeleopMain_Eleveator extends LinearOpMode {
              */
 
             if (gamepad1.y) {
-                MotorC.setTargetPosition(2000);
+                MotorC.setTargetPosition(2800);
                 MotorC.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 MotorC.setPower(1);
             }
             if (gamepad1.x) {
-                MotorC.setTargetPosition(2500);
+                MotorC.setTargetPosition(3800);
                 MotorC.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 MotorC.setPower(1);
             }
