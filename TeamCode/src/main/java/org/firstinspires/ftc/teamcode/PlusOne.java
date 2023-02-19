@@ -50,12 +50,12 @@ public class PlusOne extends LinearOpMode {
 
     static final double ARM_POWER = 0.65; //for quick adjustments
 
-    static final int HIGH_JUNCTION_TICKS = 720;
+    static final int HIGH_JUNCTION_TICKS = 740;
     static final int MEDIUM_JUNCTION_TICKS = 420;
     static final int LOW_JUNCTION_TICKS = 290;
 
-    final double turnAngle = -52;
-    final int inchAdvance = 1;
+    final double turnAngle = -58;
+    final int inchAdvance = 3;
     int coneStack = 0; //know how high to reach to get the next cone
 
     static final double clawOpen = 0.5;
@@ -128,16 +128,14 @@ public class PlusOne extends LinearOpMode {
         aprilTagDetectionPipeline = new AprilTagDetectionPipeline(tagsize, fx, fy, cx, cy);
 
         camera.setPipeline(aprilTagDetectionPipeline);
-        camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
-        {
+        camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
             @Override
-            public void onOpened()
-            {
-                camera.startStreaming(800,448, OpenCvCameraRotation.UPRIGHT);
+            public void onOpened() {
+                camera.startStreaming(800, 448, OpenCvCameraRotation.UPRIGHT);
             }
+
             @Override
-            public void onError(int errorCode)
-            {
+            public void onError(int errorCode) {
                 telemetry.addData("CAMERA ERROR=%d", errorCode);
             }
         });
@@ -146,49 +144,34 @@ public class PlusOne extends LinearOpMode {
          * The INIT-loop:
          * This REPLACES waitForStart!
          */
-        while (!isStarted() && !isStopRequested())
-        {
+        while (!isStarted() && !isStopRequested()) {
             ArrayList<AprilTagDetection> currentDetections = aprilTagDetectionPipeline.getLatestDetections();
 
-            if(currentDetections.size() != 0)
-            {
+            if (currentDetections.size() != 0) {
                 boolean tagFound = false;
 
-                for(AprilTagDetection tag : currentDetections)
-                {
-                    if(tag.id == LEFT || tag.id == MIDDLE || tag.id == RIGHT)
-                    {
+                for (AprilTagDetection tag : currentDetections) {
+                    if (tag.id == LEFT || tag.id == MIDDLE || tag.id == RIGHT) {
                         tagOfInterest = tag;
                         tagFound = true;
                         break;
                     }
                 }
 
-                if(tagFound)
-                {
+                if (tagFound) {
                     telemetry.addLine(String.format(Locale.US, "Detected tag ID: %d", tagOfInterest.id));
-                }
-                else
-                {
-                    if(tagOfInterest == null)
-                    {
+                } else {
+                    if (tagOfInterest == null) {
                         telemetry.addLine("A tag? Nope, never seen one before.");
-                    }
-                    else
-                    {
+                    } else {
                         telemetry.addLine(String.format(Locale.US, "Hmm... The last tag I saw was tag %d, but it was a while ago!", tagOfInterest.id));
                     }
                 }
 
-            }
-            else
-            {
-                if(tagOfInterest == null)
-                {
+            } else {
+                if (tagOfInterest == null) {
                     telemetry.addLine("A tag? Nope, never seen one before.");
-                }
-                else
-                {
+                } else {
                     telemetry.addLine(String.format(Locale.US, "Hmm... The last tag I saw was tag %d, but it was a while ago!", tagOfInterest.id));
                 }
 
@@ -205,12 +188,9 @@ public class PlusOne extends LinearOpMode {
          */
 
         /* Update the telemetry */
-        if(tagOfInterest != null)
-        {
+        if (tagOfInterest != null) {
             telemetry.addLine(String.format(Locale.US, "Located tag %d!", tagOfInterest.id));
-        }
-        else
-        {
+        } else {
             telemetry.addLine("No tag found... Let's guess!");
         }
         telemetry.update();
@@ -220,6 +200,8 @@ public class PlusOne extends LinearOpMode {
         clawFinger.setPosition(clawOpen);
         sleep(1000);
         clawFinger.setPosition(clawClose);
+
+        armControl(30);
 
         //move forward to high junction
         forwardDrive(50.125, 0.3);
@@ -247,28 +229,33 @@ public class PlusOne extends LinearOpMode {
         sleep(2000);
 
         //go to parking location
-        if(tagOfInterest == null || tagOfInterest.id == LEFT){
-            if (turnAngle < 0) {
-                turn(-90-turnAngle, 0.3);
-            }
-            else {
-                turn(90-turnAngle, 0.3);
-            }
-            armControl(30);
-            forwardDrive(-22, 0.3);
-        }else if(tagOfInterest.id == MIDDLE){
+        if (tagOfInterest == null || tagOfInterest.id == LEFT) {
+            forwardDrive(-4, 0.3);
+            sleep(1000);
             turn(-turnAngle, 0.3);
             armControl(30);
-            forwardDrive(-5, 0.3);
-        }else{
-            if (turnAngle < 0) {
-                turn(-90-turnAngle, 0.3);
-            }
-            else {
-                turn(90-turnAngle, 0.3);
-            }
+            sleep(1000);
+            forwardDrive(-22, 0.3);
+            turn(-95, 0.3);
+            forwardDrive(23, 0.3);
+        }
+        else if (tagOfInterest.id == RIGHT) {
+            forwardDrive(-4, 0.3);
+            sleep(1000);
+            turn(-turnAngle, 0.3);
             armControl(30);
-            forwardDrive(22, 0.3);
+            sleep(1000);
+            forwardDrive(-22, 0.3);
+            turn(-95, 0.3);
+            forwardDrive(23, 0.3);
+        }
+        else {
+            forwardDrive(-4, 0.3);
+            sleep(1000);
+            turn(-turnAngle, 0.3);
+            armControl(30);
+            sleep(1000);
+            forwardDrive(-5, 0.3);
         }
         clawFinger.setPosition(0.5);
         sleep(1000);

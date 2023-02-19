@@ -192,21 +192,21 @@ public class SignalDetectionWithMovement extends LinearOpMode
         //go to location
         if(tagOfInterest == null || tagOfInterest.id == LEFT){
             //Move forward ~28.5" = 23.5" + 3" + 2" (clear first tile then clear half of junction diameter then 2 inches for clearance)
-            encoderDrive(0.1, -23, -23);
+            encoderDrive(0.1, 23, 23);
             //turn 90 degrees left
             encoderDrive(0.1, -11, 11);
             //move forward ~24"
-            encoderDrive(0.1, -22, -22);
+            encoderDrive(0.1, 22, 22);
         }else if(tagOfInterest.id == MIDDLE){
             //move forward 87 cm (34.25") to sit in the middle of the two tiles in front
-            encoderDrive(0.1, -34, -34);
+            encoderDrive(0.1, 34, 34);
         }else{
             //Move forward ~28.5" = 23.5" + 3" + 2" (clear first tile then clear half of junction diameter then 2 inches for clearance)
-            encoderDrive(0.1, -23, -23);
+            encoderDrive(0.1, 23, 23);
             //turn 90 degrees right
             encoderDrive(0.1, 11, -11);
             //move forward ~19"
-            encoderDrive(0.1, -22, -22);
+            encoderDrive(0.1, 22, 22);
         }
     }
 

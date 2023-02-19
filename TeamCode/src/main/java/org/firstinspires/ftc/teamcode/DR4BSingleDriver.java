@@ -149,19 +149,19 @@ public class DR4BSingleDriver extends LinearOpMode {
             }
 
             //Macros!
-            if (gamepad1.y) { //go to high
+            if (gamepad1.y || gamepad2.y) { //go to high
                 targetPos = HIGH_JUNCTION_TICKS;
                 liftTime.reset();
             }
-            else if (gamepad1.b) { //go to medium
+            else if (gamepad1.b || gamepad2.b) { //go to medium
                 targetPos = MEDIUM_JUNCTION_TICKS;
                 liftTime.reset();
             }
-            else if (gamepad1.x) { //go to low
+            else if (gamepad1.x || gamepad2.x) { //go to low
                 targetPos = LOW_JUNCTION_TICKS;
                 liftTime.reset();
             }
-            else if (gamepad1.a) { //go to ground
+            else if (gamepad1.a || gamepad2.a) { //go to ground
                 targetPos = 0;
                 clawFinger.setPosition(0.1);
                 liftTime.reset();
