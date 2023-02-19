@@ -54,7 +54,7 @@ public class PlusOne extends LinearOpMode {
     static final int MEDIUM_JUNCTION_TICKS = 420;
     static final int LOW_JUNCTION_TICKS = 290;
 
-    final double turnAngle = -51;
+    final double turnAngle = -52;
     final int inchAdvance = 1;
     int coneStack = 0; //know how high to reach to get the next cone
 
@@ -269,7 +269,7 @@ public class PlusOne extends LinearOpMode {
             armControl(30);
             forwardDrive(22, 0.3);
         }
-        clawFinger.setPosition(0.6);
+        clawFinger.setPosition(0.5);
         sleep(1000);
     }
 
