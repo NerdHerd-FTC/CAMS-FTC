@@ -35,8 +35,8 @@ import org.openftc.easyopencv.OpenCvCameraRotation;
 import java.util.ArrayList;
 import java.util.Locale;
 
-@Autonomous(name="+1 Right (Encoders)", group="Robot")
-public class PlusOneEncoders extends LinearOpMode {
+@Autonomous(name="Plus One RIGHT", group="Robot")
+public class PlusOne extends LinearOpMode {
     public DcMotor leftDrive = null;
     public DcMotor rightDrive = null;
     public DcMotor DR4BMotor1 = null;
@@ -54,6 +54,8 @@ public class PlusOneEncoders extends LinearOpMode {
     static final int MEDIUM_JUNCTION_TICKS = 420;
     static final int LOW_JUNCTION_TICKS = 290;
 
+    final double turnAngle = -51;
+    final int inchAdvance = 1;
     int coneStack = 0; //know how high to reach to get the next cone
 
     static final double clawOpen = 0.5;
@@ -220,14 +222,15 @@ public class PlusOneEncoders extends LinearOpMode {
         clawFinger.setPosition(clawClose);
 
         //move forward to high junction
-        forwardPID(49);
+        forwardDrive(50.125, 0.3);
 
         armControl(HIGH_JUNCTION_TICKS);
 
         //turn to high junction
-        turn(-46);
+        turn(turnAngle, 0.3);
+        sleep(1000);
+        forwardDrive(inchAdvance, 0.3);
 
-        forwardPID(4.75);
         //wait until arm is at height
         while (DR4BMotor1.isBusy() && DR4BMotor2.isBusy()) {
 
@@ -237,88 +240,90 @@ public class PlusOneEncoders extends LinearOpMode {
 
         sleep(2000);
 
-        //open claw
         clawFinger.setPosition(clawOpen);
         sleep(1000);
+        forwardDrive(-inchAdvance, 0.3);
         clawFinger.setPosition(clawClose);
-
-        //straighten
-        forwardPID(-8);
-
-        armControl(0);
+        sleep(1000);
 
         //go to parking location
         if(tagOfInterest == null || tagOfInterest.id == LEFT){
-            turn(130);
-            forwardPID(23);
+            if (turnAngle < 0) {
+                turn(-90-turnAngle, 0.3);
+            }
+            else {
+                turn(90-turnAngle, 0.3);
+            }
+            armControl(30);
+            forwardDrive(-22, 0.3);
         }else if(tagOfInterest.id == MIDDLE){
-            turn(45);
+            turn(-turnAngle, 0.3);
+            armControl(30);
         }else{
-            turn(-45);
-            forwardPID(23);
+            if (turnAngle < 0) {
+                turn(-90-turnAngle, 0.3);
+            }
+            else {
+                turn(90-turnAngle, 0.3);
+            }
+            armControl(30);
+            forwardDrive(22, 0.3);
         }
+        clawFinger.setPosition(0.6);
+        sleep(1000);
     }
 
 
-    private void forwardPID(double targetInches) {
-        int leftLocation = leftDrive.getCurrentPosition();
-        int rightLocation = rightDrive.getCurrentPosition();
-        final int leftTarget = (int) (COUNTS_PER_INCH * targetInches) + leftLocation; //in encoder ticks
-        final int rightTarget = (int) (COUNTS_PER_INCH * targetInches) + rightLocation; //in encoder ticks
-        double leftError = leftTarget - leftLocation;
-        double rightError = rightTarget - rightLocation;
-        final int DELTA_T = 35;
+    public void forwardDrive(double targetInches, double speed) {
+        int newLeftTarget;
+        int newRightTarget;
 
-        //K constants
-        final double K_P_MOVE = 0.0008;
-        final double K_D_MOVE = 0.0105;
+        // Ensure that the opmode is still active
+        if (opModeIsActive()) {
 
-        final double D_MULT_MOVE = K_D_MOVE / DELTA_T;
+            // Determine new target position, and pass to motor controller
+            newLeftTarget = leftDrive.getCurrentPosition() + (int)(targetInches * COUNTS_PER_INCH);
+            newRightTarget = rightDrive.getCurrentPosition() + (int)(targetInches * COUNTS_PER_INCH);
+            leftDrive.setTargetPosition(newLeftTarget);
+            rightDrive.setTargetPosition(newRightTarget);
 
-        while (opModeIsActive() && Math.abs(leftError) >= 15 && Math.abs(rightError) >= 15) {
-            leftLocation = leftDrive.getCurrentPosition();
-            rightLocation = rightDrive.getCurrentPosition();
+            // Turn On RUN_TO_POSITION
+            leftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            rightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-            double leftPrevError = leftError;
-            double rightPrevError = rightError;
+            leftDrive.setPower(Math.abs(speed));
+            rightDrive.setPower(Math.abs(speed));
 
-            leftError = leftTarget - leftLocation;
-            rightError = rightTarget - rightLocation;
+            // keep looping while we are still active, and there is time left, and both motors are running.
+            // Note: We use (isBusy() && isBusy()) in the loop test, which means that when EITHER motor hits
+            // its target position, the motion will stop.  This is "safer" in the event that the robot will
+            // always end the motion as soon as possible.
+            // However, if you require that BOTH motors have finished their moves before the robot continues
+            // onto the next step, use (isBusy() || isBusy()) in the loop test.
+            while (opModeIsActive() &&
+                    (leftDrive.isBusy() && rightDrive.isBusy())) {
 
-            //P
-            double LEFT_P = K_P_MOVE * leftError;
-            //D
-            double LEFT_D = D_MULT_MOVE * (leftError - leftPrevError);
-            //Set power using PID
-            double leftPower = Math.tanh(LEFT_P + LEFT_D); //cap power at += 1
+                armCheck();
 
-            //P
-            double RIGHT_P = K_P_MOVE * rightError;
-            //D
-            double RIGHT_D = D_MULT_MOVE * (rightError - rightPrevError);
-            //Set power using PID
-            double rightPower = Math.tanh(RIGHT_P + RIGHT_D); //cap power at += 1
+                // Display it for the driver.
+                telemetry.addLine("Driving Forward...");
+                telemetry.addData("Running to",  " %7d :%7d", newLeftTarget,  newRightTarget);
+                telemetry.addData("Currently at",  " at %7d :%7d",
+                        leftDrive.getCurrentPosition(), rightDrive.getCurrentPosition());
+                telemetry.update();
+            }
 
-            leftDrive.setPower(leftPower);
-            rightDrive.setPower(rightPower);
+            // Stop all motion;
+            leftDrive.setPower(0);
+            rightDrive.setPower(0);
 
-            //set RV4B power to zero when motors are off - may be a redundancy
+            // Turn off RUN_TO_POSITION
+            leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
             armCheck();
 
-            telemetry.addData("Location: ", leftDrive.getCurrentPosition());
-            telemetry.addData("Left Target: ", leftTarget);
-            telemetry.addData("Right Target: ", rightTarget);
-
-            telemetry.addData("Left Error: ", leftError);
-            telemetry.addData("Right Error: ", rightError);
-
-            telemetry.addData("Left Power: ", leftPower);
-            telemetry.addData("Right Power: ", rightPower);
-
-            telemetry.addData("Target Inch: ", targetInches);
-            telemetry.update();
-
-            sleep(DELTA_T);
+            sleep(250);   // optional pause after each move.
         }
     }
 
@@ -327,72 +332,56 @@ public class PlusOneEncoders extends LinearOpMode {
     //right - negative
     //left - positive
     //RELATIVE TO ROBOT
-    private void turn(double degrees) {
+    private void turn(double degrees, double speed) {
         //angle to ticks conversion
         //11 inch = 90 deg.
         //11/90 deg = 1 deg.
-        final double TICKS_PER_DEGREE = 11.0 / 90 * COUNTS_PER_INCH;
-        final double DEGREES_PER_TICK = 90.0/(11*COUNTS_PER_INCH);
+        if (opModeIsActive()) {
+            final double TICKS_PER_DEGREE = 11.0 / 90 * COUNTS_PER_INCH;
 
-        double leftTarget = -TICKS_PER_DEGREE * degrees + leftDrive.getCurrentPosition(); //left negative
-        double rightTarget = TICKS_PER_DEGREE * degrees + rightDrive.getCurrentPosition(); //right positive
+            double leftTarget = -TICKS_PER_DEGREE * degrees + leftDrive.getCurrentPosition(); //left negative
+            double rightTarget = TICKS_PER_DEGREE * degrees + rightDrive.getCurrentPosition(); //right positive
 
-        double leftError = leftTarget;
-        double rightError = rightTarget;
+            leftDrive.setTargetPosition((int) leftTarget);
+            rightDrive.setTargetPosition((int) rightTarget);
 
-        //K constants
-        final double K_P_TURN = 0.0015 * 5.969 * DEGREES_PER_TICK;
-        final double K_D_TURN = 0.03 * DEGREES_PER_TICK;
-        final int DELTA_T = 35;
+            // Turn On RUN_TO_POSITION
+            leftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            rightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-        final double D_MULT_TURN = K_D_TURN / DELTA_T;
+            leftDrive.setPower(Math.abs(speed));
+            rightDrive.setPower(Math.abs(speed));
 
-        while (opModeIsActive() && Math.abs(leftError) >= 15 && Math.abs(rightError) >= 15) {
-            double leftLocation = leftDrive.getCurrentPosition();
-            double prevLeftError = leftError;
-            leftError = leftTarget - leftLocation;
+            while (opModeIsActive() &&
+                    (leftDrive.isBusy() && rightDrive.isBusy())) {
 
-            double P_LEFT = K_P_TURN * leftError;
-            //D
-            double D_LEFT = D_MULT_TURN * (leftError - prevLeftError);
-            //Set power using PID
-            double leftPower = P_LEFT + D_LEFT;
+                armCheck();
 
-            double rightLocation = rightDrive.getCurrentPosition();
-            double prevRightError = rightError;
-            rightError = rightTarget - rightLocation;
-
-            double P_RIGHT = K_P_TURN * rightError;
-            //D
-            double D_RIGHT = D_MULT_TURN * (rightError - prevRightError);
-            //Set power using PID
-            double rightPower = P_RIGHT + D_RIGHT; //cap power at += 1
-
-            leftDrive.setPower(Math.tanh(leftPower));
-            rightDrive.setPower(Math.tanh(rightPower));
-
-            //set RV4B power to zero when motors are off - may be a redundancy
-            if (!DR4BMotor1.isBusy() && !DR4BMotor2.isBusy()) {
-                DR4BMotor1.setPower(0);
-                DR4BMotor2.setPower(0);
+                // Display it for the driver.
+                telemetry.addLine("Turning...");
+                telemetry.addData("Target Angle: ", degrees);
+                telemetry.addData("Speed: ", speed);
+                telemetry.addLine("\n");
+                telemetry.addData("Left Drive: ", leftDrive.getCurrentPosition());
+                telemetry.addData("Right Drive: ", rightDrive.getCurrentPosition());
+                telemetry.addLine("\n");
+                telemetry.addData("Left Error", leftTarget - leftDrive.getCurrentPosition());
+                telemetry.addData("Right Error", rightTarget - rightDrive.getCurrentPosition());
+                telemetry.update();
             }
 
-            telemetry.addData("Left Location", leftDrive.getCurrentPosition());
-            telemetry.addData("Left Target: ", leftTarget);
-            telemetry.addData("Left Error: ", leftError);
-            telemetry.addData("Left Raw Drive Power: ", leftPower);
-            telemetry.addData("Left Drive Power: ", leftDrive.getPower());
-            telemetry.addLine("\n\n");
-            telemetry.addData("Right Location", rightDrive.getCurrentPosition());
-            telemetry.addData("Right Target: ", rightTarget);
-            telemetry.addData("Right Error: ", rightError);
-            telemetry.addData("Right Raw Drive Power: ", rightPower);
-            telemetry.addData("Right Drive Power: ", rightDrive.getPower());
-            telemetry.update();
+            // Stop all motion;
+            leftDrive.setPower(0);
+            rightDrive.setPower(0);
 
-            sleep(DELTA_T);
+            // Turn off RUN_TO_POSITION
+            leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+            armCheck();
         }
-        armCheck();
+
+        sleep(250);   // optional pause after each move.
     }
 
     private void armControl(int loc) {
