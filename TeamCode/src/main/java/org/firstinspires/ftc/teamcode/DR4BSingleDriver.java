@@ -185,8 +185,7 @@ public class DR4BSingleDriver extends LinearOpMode {
             double powerPDF1 = 0;
             double powerPDF2 = 0;
 
-            //Base PID
-            if (!manualControl && liftTime.seconds() < 10) {
+            if (!manualControl) {
                 error1 = targetPos - RV4BMotor1.getCurrentPosition();
                 double P1 = K_P * error1;
                 double D1 = D_MULT * (prevPos1 - RV4BMotor1.getCurrentPosition());
@@ -224,12 +223,15 @@ public class DR4BSingleDriver extends LinearOpMode {
 
                 if (Math.abs(powerPDF1) <= threshold || Math.abs(error1) <= 15){ //if power is less than 0.1 OR error is less than 15, set power to zero
                     powerPDF1 = 0;
-                    liftTime.reset();
                 }
 
                 if (Math.abs(powerPDF2) <= threshold || Math.abs(error2) <= 15) { //if power is less than 0.1 OR error is less than 15, set power to zero
                     powerPDF2 = 0;
-                    liftTime.reset();
+                }
+
+                if (liftTime.seconds() > 10) {
+                    powerPDF1 = 0;
+                    powerPDF2 = 0;
                 }
 
                 //Final RV4B Motor Powers
