@@ -50,7 +50,7 @@ public class PlusOneEncoders extends LinearOpMode {
 
     static final double ARM_POWER = 0.65; //for quick adjustments
 
-    static final int HIGH_JUNCTION_TICKS = 690;
+    static final int HIGH_JUNCTION_TICKS = 720;
     static final int MEDIUM_JUNCTION_TICKS = 420;
     static final int LOW_JUNCTION_TICKS = 290;
 
@@ -220,15 +220,14 @@ public class PlusOneEncoders extends LinearOpMode {
         clawFinger.setPosition(clawClose);
 
         //move forward to high junction
-        forwardPID(50.125);
+        forwardPID(49);
 
         armControl(HIGH_JUNCTION_TICKS);
 
         //turn to high junction
-        turn(-45);
+        turn(-46);
 
-        forwardPID(6);
-
+        forwardPID(4.75);
         //wait until arm is at height
         while (DR4BMotor1.isBusy() && DR4BMotor2.isBusy()) {
 
@@ -236,19 +235,21 @@ public class PlusOneEncoders extends LinearOpMode {
         DR4BMotor1.setPower(0);
         DR4BMotor2.setPower(0);
 
+        sleep(2000);
+
         //open claw
         clawFinger.setPosition(clawOpen);
-        sleep(2000);
+        sleep(1000);
         clawFinger.setPosition(clawClose);
 
         //straighten
-        forwardPID(-5.25);
+        forwardPID(-8);
 
         armControl(0);
 
         //go to parking location
         if(tagOfInterest == null || tagOfInterest.id == LEFT){
-            turn(135);
+            turn(130);
             forwardPID(23);
         }else if(tagOfInterest.id == MIDDLE){
             turn(45);
@@ -260,9 +261,12 @@ public class PlusOneEncoders extends LinearOpMode {
 
 
     private void forwardPID(double targetInches) {
-        int location = (leftDrive.getCurrentPosition() + rightDrive.getCurrentPosition())/2;
-        final int target = (int) (COUNTS_PER_INCH * targetInches) + location; //in encoder ticks
-        double error = (target - location);
+        int leftLocation = leftDrive.getCurrentPosition();
+        int rightLocation = rightDrive.getCurrentPosition();
+        final int leftTarget = (int) (COUNTS_PER_INCH * targetInches) + leftLocation; //in encoder ticks
+        final int rightTarget = (int) (COUNTS_PER_INCH * targetInches) + rightLocation; //in encoder ticks
+        double leftError = leftTarget - leftLocation;
+        double rightError = rightTarget - rightLocation;
         final int DELTA_T = 35;
 
         //K constants
@@ -271,27 +275,46 @@ public class PlusOneEncoders extends LinearOpMode {
 
         final double D_MULT_MOVE = K_D_MOVE / DELTA_T;
 
-        while (opModeIsActive() && Math.abs(error) >= 15) {
-            location = (leftDrive.getCurrentPosition() + rightDrive.getCurrentPosition())/2;
-            double prevError = error;
-            error = (target - location);
-            //P
-            double P = K_P_MOVE * error;
-            //D
-            double D = D_MULT_MOVE * (error - prevError);
-            //Set power using PID
-            double drivePower = Math.tanh(P + D); //cap power at += 1
+        while (opModeIsActive() && Math.abs(leftError) >= 15 && Math.abs(rightError) >= 15) {
+            leftLocation = leftDrive.getCurrentPosition();
+            rightLocation = rightDrive.getCurrentPosition();
 
-            leftDrive.setPower(drivePower);
-            rightDrive.setPower(drivePower);
+            double leftPrevError = leftError;
+            double rightPrevError = rightError;
+
+            leftError = leftTarget - leftLocation;
+            rightError = rightTarget - rightLocation;
+
+            //P
+            double LEFT_P = K_P_MOVE * leftError;
+            //D
+            double LEFT_D = D_MULT_MOVE * (leftError - leftPrevError);
+            //Set power using PID
+            double leftPower = Math.tanh(LEFT_P + LEFT_D); //cap power at += 1
+
+            //P
+            double RIGHT_P = K_P_MOVE * rightError;
+            //D
+            double RIGHT_D = D_MULT_MOVE * (rightError - rightPrevError);
+            //Set power using PID
+            double rightPower = Math.tanh(RIGHT_P + RIGHT_D); //cap power at += 1
+
+            leftDrive.setPower(leftPower);
+            rightDrive.setPower(rightPower);
 
             //set RV4B power to zero when motors are off - may be a redundancy
             armCheck();
 
             telemetry.addData("Location: ", leftDrive.getCurrentPosition());
-            telemetry.addData("Target: ", target);
-            telemetry.addData("Error Number: ", error);
-            telemetry.addData("Raw Drive Power: ", drivePower);
+            telemetry.addData("Left Target: ", leftTarget);
+            telemetry.addData("Right Target: ", rightTarget);
+
+            telemetry.addData("Left Error: ", leftError);
+            telemetry.addData("Right Error: ", rightError);
+
+            telemetry.addData("Left Power: ", leftPower);
+            telemetry.addData("Right Power: ", rightPower);
+
             telemetry.addData("Target Inch: ", targetInches);
             telemetry.update();
 

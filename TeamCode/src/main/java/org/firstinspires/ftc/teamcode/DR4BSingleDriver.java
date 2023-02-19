@@ -46,7 +46,7 @@ public class DR4BSingleDriver extends LinearOpMode {
     public DcMotor RV4BMotor2 = null;
     public Servo clawFinger = null;
 
-    static final int  HIGH_JUNCTION_TICKS = 690;
+    static final int  HIGH_JUNCTION_TICKS = 750;
     static final int  MEDIUM_JUNCTION_TICKS = 500;
     static final int  LOW_JUNCTION_TICKS = 320;
 
@@ -73,7 +73,7 @@ public class DR4BSingleDriver extends LinearOpMode {
         double speedBOOST = 1;
 
         //K Variable Bank
-        double K_P = 0.0025;
+        double K_P = 0.003;
         double K_D = 0.0025;
         double K_ADJ = 0.01;
         int DELTA_T = 35;
@@ -161,13 +161,13 @@ public class DR4BSingleDriver extends LinearOpMode {
                 clawFinger.setPosition(0.1);
             }
 
-            if (gamepad1.left_trigger >= 0.4 && RV4BMotor1.getCurrentPosition() > 0 && RV4BMotor2.getCurrentPosition() > 0){ //go down manually
+            if (gamepad1.left_trigger >= 0.4 && RV4BMotor1.getCurrentPosition() > -100 && RV4BMotor2.getCurrentPosition() > -100){ //go down manually
                 manualControl = true;
                 targetPos = (RV4BMotor1.getCurrentPosition() + RV4BMotor2.getCurrentPosition())/2;
                 RV4BMotor1.setPower(-MACRO_POWER);
                 RV4BMotor2.setPower(-MACRO_POWER);
             }
-            else if (gamepad1.right_trigger >= 0.4 && RV4BMotor1.getCurrentPosition() < 690 && RV4BMotor2.getCurrentPosition() < 690){ //go up manually
+            else if (gamepad1.right_trigger >= 0.4 && RV4BMotor1.getCurrentPosition() < 800 && RV4BMotor2.getCurrentPosition() < 800){ //go up manually
                 manualControl = true;
                 targetPos = (RV4BMotor1.getCurrentPosition() + RV4BMotor2.getCurrentPosition())/2;
                 RV4BMotor1.setPower(MACRO_POWER);
@@ -208,10 +208,13 @@ public class DR4BSingleDriver extends LinearOpMode {
                     threshold = 0.125;
                 }
 
-                //If the values are slanting, adjust for it!
-                int diff = RV4BMotor1.getCurrentPosition() - RV4BMotor2.getCurrentPosition();
-                powerPDF1 -= diff * K_ADJ;
-                powerPDF2 += diff * K_ADJ;
+                //only apply slanting when going down
+//                if (error1 < 0 && error2 < 0) {
+//                    //If the values are slanting, adjust for it!
+//                    int diff = RV4BMotor1.getCurrentPosition() - RV4BMotor2.getCurrentPosition();
+//                    powerPDF1 -= diff * K_ADJ;
+//                    powerPDF2 += diff * K_ADJ;
+//                }
 
                 if (Math.abs(powerPDF1) <= threshold || Math.abs(error1) <= 15){ //if power is less than 0.1 OR error is less than 15, set power to zero
                     powerPDF1 = 0;
@@ -261,6 +264,7 @@ public class DR4BSingleDriver extends LinearOpMode {
             if (Math.abs(gamepad2.right_trigger) >= 0.4 && Math.abs(gamepad2.left_trigger) >= 0.4) {
                 //short-term speed boost, increases max power to 0.9
                 speedBOOST = 2;
+                telemetry.addLine("SPEED BOOOOOOOOOOOOOST!");
             } else {
                 speedBOOST = 1;
             }
