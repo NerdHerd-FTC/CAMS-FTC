@@ -244,7 +244,7 @@ public class PlusOne extends LinearOpMode {
         sleep(1000);
         forwardDrive(-inchAdvance, 0.3);
         clawFinger.setPosition(clawClose);
-        sleep(1000);
+        sleep(2000);
 
         //go to parking location
         if(tagOfInterest == null || tagOfInterest.id == LEFT){
@@ -259,6 +259,7 @@ public class PlusOne extends LinearOpMode {
         }else if(tagOfInterest.id == MIDDLE){
             turn(-turnAngle, 0.3);
             armControl(30);
+            forwardDrive(-5, 0.3);
         }else{
             if (turnAngle < 0) {
                 turn(-90-turnAngle, 0.3);
