@@ -24,6 +24,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -37,9 +38,13 @@ import java.util.Locale;
 
 @Autonomous(name="Signal Detection with Movement", group="Robot")
 public class SignalDetectionWithMovement extends LinearOpMode
+
 {
     public DcMotor leftDrive = null;
     public DcMotor rightDrive = null;
+    public DcMotor DR4BMotor1 = null;
+    public DcMotor DR4BMotor2 = null;
+    public Servo clawFinger = null;
 
     private ElapsedTime runtime = new ElapsedTime();
 
@@ -81,6 +86,7 @@ public class SignalDetectionWithMovement extends LinearOpMode
     {
         leftDrive = hardwareMap.get(DcMotor.class, "MotorA");
         rightDrive = hardwareMap.get(DcMotor.class, "MotorB");
+        clawFinger = hardwareMap.get(Servo.class, "ServoFinger");
 
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
@@ -94,6 +100,23 @@ public class SignalDetectionWithMovement extends LinearOpMode
 
         leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        DR4BMotor1 = hardwareMap.get(DcMotor.class, "MotorC");
+        DR4BMotor2 = hardwareMap.get(DcMotor.class, "MotorD");
+        clawFinger = hardwareMap.get(Servo.class, "ServoFinger");
+
+        //core hex motors are facing opposite each other and will rotate in opposite directions
+        DR4BMotor1.setDirection(DcMotor.Direction.FORWARD);
+        DR4BMotor2.setDirection(DcMotor.Direction.REVERSE);
+
+        DR4BMotor1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        DR4BMotor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        DR4BMotor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        DR4BMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        DR4BMotor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        DR4BMotor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam"), cameraMonitorViewId);
@@ -189,6 +212,16 @@ public class SignalDetectionWithMovement extends LinearOpMode
         }
         telemetry.update();
 
+        clawFinger.setPosition(0.1);
+        armControl(30);
+
+        //wait until arm is at height
+        while (DR4BMotor1.isBusy() && DR4BMotor2.isBusy()) {
+
+        }
+        DR4BMotor1.setPower(0);
+        DR4BMotor2.setPower(0);
+
         //go to location
         if(tagOfInterest == null || tagOfInterest.id == LEFT){
             //Move forward ~28.5" = 23.5" + 3" + 2" (clear first tile then clear half of junction diameter then 2 inches for clearance)
@@ -196,7 +229,7 @@ public class SignalDetectionWithMovement extends LinearOpMode
             //turn 90 degrees left
             encoderDrive(0.1, -11, 11);
             //move forward ~24"
-            encoderDrive(0.1, 22, 22);
+            encoderDrive(0.1, 24, 24);
         }else if(tagOfInterest.id == MIDDLE){
             //move forward 87 cm (34.25") to sit in the middle of the two tiles in front
             encoderDrive(0.1, 34, 34);
@@ -206,7 +239,7 @@ public class SignalDetectionWithMovement extends LinearOpMode
             //turn 90 degrees right
             encoderDrive(0.1, 11, -11);
             //move forward ~19"
-            encoderDrive(0.1, 22, 22);
+            encoderDrive(0.1, 24, 24);
         }
     }
 
@@ -256,6 +289,27 @@ public class SignalDetectionWithMovement extends LinearOpMode
             rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
             sleep(250);   // optional pause after each move.
+        }
+    }
+
+    private void armControl(int loc) {
+        if (opModeIsActive()) {
+            DR4BMotor1.setTargetPosition(loc);
+            DR4BMotor2.setTargetPosition(loc);
+
+            DR4BMotor1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            DR4BMotor2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            DR4BMotor1.setPower(0.5);
+            DR4BMotor2.setPower(0.5);
+        }
+    }
+
+    //use in the future as a PDF threshold checker
+    private void armCheck() {
+        if (!DR4BMotor1.isBusy() && !DR4BMotor2.isBusy()) {
+            DR4BMotor1.setPower(0);
+            DR4BMotor2.setPower(0);
         }
     }
 }

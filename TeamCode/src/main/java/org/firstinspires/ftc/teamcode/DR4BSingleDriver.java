@@ -275,7 +275,10 @@ public class DR4BSingleDriver extends LinearOpMode {
                 //short-term speed boost, increases max power to 0.9
                 speedBOOST = 2;
                 telemetry.addLine("SPEED BOOOOOOOOOOOOOST!");
-            } else {
+            } else if (gamepad2.right_bumper && gamepad2.left_bumper) {
+                speedBOOST = 0.5;
+            }
+            else {
                 speedBOOST = 1;
             }
 

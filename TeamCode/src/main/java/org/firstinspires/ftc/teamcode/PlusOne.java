@@ -221,40 +221,28 @@ public class PlusOne extends LinearOpMode {
         DR4BMotor2.setPower(0);
 
         sleep(2000);
+        forwardDrive(-2, 0.3);
 
         clawFinger.setPosition(clawOpen);
         sleep(1000);
         forwardDrive(-inchAdvance, 0.3);
         clawFinger.setPosition(clawClose);
-        sleep(2000);
+        sleep(1000);
+        turn(-turnAngle, 0.3);
+        armControl(30);
 
         //go to parking location
         if (tagOfInterest == null || tagOfInterest.id == LEFT) {
-            forwardDrive(-4, 0.3);
-            sleep(1000);
-            turn(-turnAngle, 0.3);
-            armControl(30);
-            sleep(1000);
             forwardDrive(-22, 0.3);
-            turn(-95, 0.3);
+            turn(95, 0.3);
             forwardDrive(23, 0.3);
         }
         else if (tagOfInterest.id == RIGHT) {
-            forwardDrive(-4, 0.3);
-            sleep(1000);
-            turn(-turnAngle, 0.3);
-            armControl(30);
-            sleep(1000);
             forwardDrive(-22, 0.3);
             turn(-95, 0.3);
-            forwardDrive(23, 0.3);
+            forwardDrive(22, 0.3);
         }
         else {
-            forwardDrive(-4, 0.3);
-            sleep(1000);
-            turn(-turnAngle, 0.3);
-            armControl(30);
-            sleep(1000);
             forwardDrive(-5, 0.3);
         }
         clawFinger.setPosition(0.5);
