@@ -1,0 +1,155 @@
+/*
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted (subject to the limitations in the disclaimer below) provided that
+ * the following conditions are met:
+ *
+ * Redistributions of source code must retain the above copyright notice, this list
+ * of conditions and the following disclaimer.
+ *
+ * Redistributions in binary form must reproduce the above copyright notice, this
+ * list of conditions and the following disclaimer in the documentation and/or
+ * other materials provided with the distribution.
+ *
+ * Neither the name of FIRST nor the names of its contributors may be used to endorse or
+ * promote products derived from this software without specific prior written permission.
+ *
+ * NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE GRANTED BY THIS
+ * LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+package org.firstinspires.ftc.teamcode.Archive;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
+/**
+ * TelelOp for Double Reverse Virtual 4 Bar with Macro
+ */
+@TeleOp(name= "RV4B Test", group="Robot")
+@Disabled
+public class RV4B extends LinearOpMode {
+    /* Declare OpMode members. */
+    public DcMotor RV4BMotor1 = null;
+    public DcMotor RV4BMotor2 = null;
+
+    static final int  TICKS_TO_REACH = 380;
+    static final double MACRO_POWER = Math.abs(0.65); //for quick adjustments
+    static final double ARM_POWER = Math.abs(0.65); //prevent rogue negatives
+    private ElapsedTime runtime = new ElapsedTime();
+
+    @Override
+    public void runOpMode() {
+
+        // Define and Initialize Motors and Servos
+        RV4BMotor1 = hardwareMap.get(DcMotor.class, "MotorC");
+        RV4BMotor2 = hardwareMap.get(DcMotor.class, "MotorD");
+        //clawFinger = hardwareMap.get(Servo.class, "ServoFinger");
+
+        //core hex motors are facing opposite each other and will rotate in opposite directions
+        RV4BMotor1.setDirection(DcMotor.Direction.REVERSE);
+        RV4BMotor2.setDirection(DcMotor.Direction.FORWARD);
+
+        RV4BMotor1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        RV4BMotor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        RV4BMotor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        RV4BMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        RV4BMotor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        RV4BMotor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        //clawFinger = hardwareMap.get(Servo.class, "ServoFinger");
+
+        // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
+        // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
+        // Note: The settings here assume direct drive on left and right wheels.  Gear Reduction or 90 Deg drives may require direction flips
+        runtime.reset();
+
+        // Send telemetry message to signify robot waiting;
+        telemetry.addData(">", "Robot Ready.  Press Play.");    //
+        telemetry.update();
+        // Wait for the game to start (driver presses PLAY)
+        waitForStart();
+        // run until the end of the match (driver presses STOP)
+        while (opModeIsActive()) {
+            // Run wheels in POV mode (note: The joystick goes negative when pushed forward, so negate it)
+            // In this mode the Left stick moves the robot fwd and back, the Right stick turns left and right.
+            // This way it's also easy to just drive straight, or just turn.
+
+            //set power to zero when motors are off
+            if (!RV4BMotor1.isBusy() && !RV4BMotor2.isBusy()) {
+                RV4BMotor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                RV4BMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                RV4BMotor1.setPower(0);
+                RV4BMotor2.setPower(0);
+            }
+
+            //macro
+            if (gamepad1.b) { //kill switch!
+                RV4BMotor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                RV4BMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+                RV4BMotor1.setPower(0);
+                RV4BMotor2.setPower(0);
+            } else if (gamepad1.y) { //go up
+                RV4BMotor1.setTargetPosition(TICKS_TO_REACH);
+                RV4BMotor2.setTargetPosition(TICKS_TO_REACH);
+
+                RV4BMotor1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                RV4BMotor2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+                RV4BMotor1.setPower(MACRO_POWER);
+                RV4BMotor2.setPower(MACRO_POWER);
+            } else if (gamepad1.a) { //go down
+                RV4BMotor1.setTargetPosition(0);
+                RV4BMotor2.setTargetPosition(0);
+
+                RV4BMotor1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                RV4BMotor2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+                RV4BMotor1.setPower(MACRO_POWER);
+                RV4BMotor2.setPower(MACRO_POWER);
+            }
+
+            if (gamepad1.left_trigger >= 0.4){ //go down
+                RV4BMotor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                RV4BMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+                RV4BMotor1.setPower(-ARM_POWER);
+                RV4BMotor2.setPower(-ARM_POWER);
+            }
+            else if (gamepad1.right_trigger >= 0.4){ //go up
+                RV4BMotor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                RV4BMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+                RV4BMotor1.setPower(ARM_POWER);
+                RV4BMotor2.setPower(ARM_POWER);
+            } else if (RV4BMotor1.getMode() == DcMotor.RunMode.RUN_USING_ENCODER && RV4BMotor2.getMode() == DcMotor.RunMode.RUN_USING_ENCODER) { //stop if there's no macro involved & if there are no trigger action
+                RV4BMotor1.setPower(0);
+                RV4BMotor2.setPower(0);
+            }
+
+            // Send telemetry message to signify robot running;
+            telemetry.addData("RV4B Power A: ", "%.2f", RV4BMotor1.getPower());
+            telemetry.addData("RV4B Power B: ", "%.2f", RV4BMotor2.getPower());
+            telemetry.addData("RV4B Motor A Encoder: ", RV4BMotor1.getCurrentPosition());
+            telemetry.addData("RV4B Motor B Encoder: ", RV4BMotor2.getCurrentPosition());
+            telemetry.update();
+
+            // Pace this loop so jaw action is reasonable speed.
+            sleep(50);
+        }
+    }
+}

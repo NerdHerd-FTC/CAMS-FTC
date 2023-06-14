@@ -30,7 +30,7 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
 TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.Archive;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
@@ -71,7 +71,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
  */
 
 @TeleOp(name="Concept: IMU Orientation", group="Concept")
-//@Disabled
+@Disabled
 public class ConceptExploringIMUOrientation extends LinearOpMode {
     static RevHubOrientationOnRobot.LogoFacingDirection[] logoFacingDirections
             = RevHubOrientationOnRobot.LogoFacingDirection.values();
@@ -150,7 +150,9 @@ public class ConceptExploringIMUOrientation extends LinearOpMode {
 
             // Display User instructions and IMU data
             telemetry.addData("logo Direction (set with bumpers)", logoFacingDirections[logoFacingDirectionPosition]);
-            telemetry.addData("usb Direction (set with triggers)", usbFacingDirections[usbFacingDirectionPosition] + "\n");
+            telemetry.addData("Logo Direction Raw Value", logoFacingDirectionPosition);
+            telemetry.addData("usb Direction (set with triggers)", usbFacingDirections[usbFacingDirectionPosition]);
+            telemetry.addData("usb Direction Raw Value", usbFacingDirectionPosition + "\n");
 
             if (orientationIsValid) {
                 YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();

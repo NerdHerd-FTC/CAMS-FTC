@@ -1,6 +1,7 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.Archive;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -21,8 +22,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
  */
 
 @TeleOp(name="Robot: Teleop POV", group="Robot")
-//@Disabled
-public class RobotTeleopPOV_Linear extends LinearOpMode {
+@Disabled
+public class RobotTeleopPOV_Linear_With_IMU_Example extends LinearOpMode {
 
     /* Declare OpMode members. */
     private DcMotor FrontRightMotor = null;

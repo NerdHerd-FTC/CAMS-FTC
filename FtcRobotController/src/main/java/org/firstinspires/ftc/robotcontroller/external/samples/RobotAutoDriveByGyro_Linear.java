@@ -225,7 +225,6 @@ public class RobotAutoDriveByGyro_Linear extends LinearOpMode {
 
         // Ensure that the opmode is still active
         if (opModeIsActive()) {
-
             // Determine new target position, and pass to motor controller
             int moveCounts = (int)(distance * COUNTS_PER_INCH);
             leftTarget = leftDrive.getCurrentPosition() + moveCounts;
