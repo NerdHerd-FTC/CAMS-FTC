@@ -21,24 +21,23 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
-
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.openftc.apriltag.AprilTagDetection;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.hardware.Servo;
 
 import java.util.ArrayList;
-@Disabled
+
+///sabled
 @Autonomous
-public class EncoderAprilTagAutonomousInitDetectionExample extends LinearOpMode {
+public class LEFT extends LinearOpMode {
     OpenCvCamera camera;
     AprilTagDetectionPipeline aprilTagDetectionPipeline;
 
@@ -150,7 +149,7 @@ public class EncoderAprilTagAutonomousInitDetectionExample extends LinearOpMode 
                 if (tagFound) {
                     telemetry.addLine("Tag of interest is in sight!\n\nLocation data:");
                 } else {
-                    telemetry.addLine("Don'+9t see tag of interest :(");
+                    telemetry.addLine("Don't see tag of interest :(");
 
                     if (tagOfInterest == null) {
                         telemetry.addLine("(The tag has never been seen)");
@@ -189,61 +188,50 @@ public class EncoderAprilTagAutonomousInitDetectionExample extends LinearOpMode 
             telemetry.update();
         }
 
-        /*
-        Claw.setPosition(0.55);
-        if (Claw.getPosition() != 0.55) {
-            LiftMotor.setPower(0);
-            LiftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        }
-        LiftMotor.setTargetPosition(1343);
-        LiftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        LiftMotor.setPower(0.3);
-        encoderDrive(0.5,52,52);
-        while (MotorA.isBusy()||MotorB.isBusy()) {
-        }
-        MotorA.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        MotorB.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        encoderDrive(0.5,16.5,-16.5);
-        Claw.setPosition(0.55);
-        MotorA.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        MotorB.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        encoderDrive(0.5,16.5,-16.5);
-        while (MotorA.isBusy() && MotorB.isBusy()){
-            LiftMotor.setTargetPosition(600);
-            LiftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            LiftMotor.setPower(0.9);
-        }
-
-         */
-
-
 
 
         /* Actually do something useful */
         //go to location
-        if(tagOfInterest == null || tagOfInterest.id == MIDDLE){
-            //move forward 87 cm (34.25") to sit in the middle of the two tiles in front
-            encoderDrive(0.1, 34, 34);
 
+        Claw.setPosition(0.7);
+        LiftMotor.setTargetPosition(2600);
+        LiftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        LiftMotor.setPower(1);
+        encoderDrive(0.5, 38,38);
+        encoderDrive(0.3, -15,-15);
+        encoderDrive(0.1, -6.75, 6.75);
+        encoderDrive(0.1, 6.75,6.75);
+
+        /*
+        encoderDrive(0.3,2.3,2.3);
+        encoderDrive(0.3, -11.5, 11.5);
+        encoderDrive(0.3, 20.5, 20.5);
+        encoderDrive(0.3, 11.5, -11.5);
+        encoderDrive(0.3, 21, 21);
+        encoderDrive(0.1, 6.5, -6.5);
+
+         */
+
+        Claw.setPosition(0.3);
+        encoderDrive(0.1, -6.75,-6.75);
+        encoderDrive(0.3,-5.25,5.25);
+        LiftMotor.setTargetPosition(0);
+        LiftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        LiftMotor.setPower(1);
+
+        if(tagOfInterest == null || tagOfInterest.id == MIDDLE) {
+            //encoderDrive(0.3, 22, 22);
         }else if(tagOfInterest.id == LEFT){
-            //Move forward ~28.5" = 23.5" + 3" + 2" (clear first tile then clear half of junction diameter then 2 inches for clearance)
-            encoderDrive(0.1, 28, 28);
-            //move back 2"
-            encoderDrive(0.1, -4, -4);
-            //turn 90 degrees left
-            encoderDrive(0.1, -11, 11);
-            //move forward ~24"
-            encoderDrive(0.1, 21, 21);
+            //encoderDrive(0.3, 22, 22);
+            encoderDrive(0.3, 21 , 21);
+
+
         }else{
-            //Move forward ~28.5" = 23.5" + 3" + 2" (clear first tile then clear half of junction diameter then 2 inches for clearance)
-            encoderDrive(0.1, 28, 28);
-            //move back 2"
-            encoderDrive(0.1, -4, -4);
-            //turn 90 degrees right
-            encoderDrive(0.1, 11, -11);
-            //move forward ~19"
-            encoderDrive(0.1, 21, 21);
+            //encoderDrive(0.3, 42, 42);
+            encoderDrive(0.3, -20, -20);
+
         }
+
 
 
     }
@@ -284,6 +272,9 @@ public class EncoderAprilTagAutonomousInitDetectionExample extends LinearOpMode 
                 telemetry.addData("Running to",  " %7d :%7d", newLeftTarget,  newRightTarget);
                 telemetry.addData("Currently at",  " at %7d :%7d",
                         MotorA.getCurrentPosition(), MotorB.getCurrentPosition());
+                telemetry.addData("Left Power:",  "%.2f", MotorA.getPower());
+                telemetry.addData("Right Power:",  "%.2f", MotorB.getPower());
+
                 telemetry.update();
             }
 

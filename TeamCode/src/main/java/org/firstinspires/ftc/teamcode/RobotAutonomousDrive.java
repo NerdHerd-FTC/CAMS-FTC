@@ -39,6 +39,8 @@ import com.qualcomm.robotcore.hardware.IMU;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -109,7 +111,7 @@ import java.util.Objects;
  */
 
 @Autonomous(name="Game Robot Autonomous", group="Robot") // Drive
-//@Disabled
+@Disabled
 public class RobotAutonomousDrive extends OpMode
 {
     /* Declare OpMode members. */

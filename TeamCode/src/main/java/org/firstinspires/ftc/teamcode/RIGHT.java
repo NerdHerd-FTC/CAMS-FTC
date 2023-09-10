@@ -37,7 +37,7 @@ import java.util.ArrayList;
 
 ///sabled
 @Autonomous
-public class EncoderAprilTagAutonomousInitDetectionExample_experimental extends LinearOpMode {
+public class RIGHT extends LinearOpMode {
     OpenCvCamera camera;
     AprilTagDetectionPipeline aprilTagDetectionPipeline;
 
@@ -194,13 +194,13 @@ public class EncoderAprilTagAutonomousInitDetectionExample_experimental extends 
         //go to location
 
         Claw.setPosition(0.7);
-        LiftMotor.setTargetPosition(2700);
+        LiftMotor.setTargetPosition(2650);
         LiftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         LiftMotor.setPower(1);
         encoderDrive(0.5, 38,38);
         encoderDrive(0.3, -15,-15);
-        encoderDrive(0.1, -6.75, 6.75);
-        encoderDrive(0.1, 6.25,6.25);
+        encoderDrive(0.1, 6, -6);
+        encoderDrive(0.1, 6.5,6.5);
 
         /*
         encoderDrive(0.3,2.3,2.3);
@@ -213,19 +213,22 @@ public class EncoderAprilTagAutonomousInitDetectionExample_experimental extends 
          */
 
         Claw.setPosition(0.3);
-        encoderDrive(0.1, -7,-7);
-        encoderDrive(0.3,-5.25,5.25);
+        encoderDrive(0.1, -6.5,-6.5);
+        encoderDrive(0.3,5.5,-5.5);
+        LiftMotor.setTargetPosition(0);
+        LiftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        LiftMotor.setPower(1);
 
         if(tagOfInterest == null || tagOfInterest.id == MIDDLE) {
             //encoderDrive(0.3, 22, 22);
         }else if(tagOfInterest.id == LEFT){
             //encoderDrive(0.3, 22, 22);
-            encoderDrive(0.3, 21 , 21);
+            encoderDrive(0.3, -20 , -20);
 
 
         }else{
             //encoderDrive(0.3, 42, 42);
-            encoderDrive(0.3, -20, -20);
+            encoderDrive(0.3, 21, 21);
 
         }
 
